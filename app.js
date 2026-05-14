@@ -17,6 +17,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const handleEnter = e => { if (e.key === 'Enter' && !e.isComposing) startTrace(); };
   document.getElementById('address-input').addEventListener('keydown', handleEnter);
   document.getElementById('target-chars-input').addEventListener('keydown', handleEnter);
+  
+  // ページ読み込み完了時に自動的にプレビュー描画を開始する
+  setTimeout(() => startTrace(), 500);
 });
 
 function setStatus(text, pct) {
