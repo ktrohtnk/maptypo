@@ -107,33 +107,26 @@ function clearMap() {
 
 async function startTrace() {
   const address = document.getElementById('address-input').value.trim();
-  // \n（改行）を許可するように正規表現を変更
-  const text = document.getElementById('target-chars-input').value.toUpperCase().replace(/[^A-Z0-9 \n]/g, '');
+  const text = document.getElementById('target-chars-input').value.toUpperCase().replace(/[^A-Z0-9 ]/g, '');
   const letterSize = parseInt(document.getElementById('size-select').value);
 
   if (!address || !text) return alert('場所と文字を入力してください');
-
+  
   setBtn(true);
-  clearMap();
-
   try {
     setStatus('📍 場所を検索中...', 10);
     const loc = await geocode(address);
     
-    // Adjust zoom and fetch radius based on true text block dimensions
-    const lines = text.split('\n');
-    const maxLineLen = Math.max(...lines.map(l => l.length));
-    const estimatedWidth = maxLineLen * letterSize * 1.5;
-    const estimatedHeight = lines.length * letterSize * 1.5;
-    const requiredSize = Math.max(estimatedWidth, estimatedHeight);
-    
+    // Adjust zoom based on requested letter size so the whole text fits
+    const estimatedWidth = text.length * letterSize * 1.5;
     let zoom = 14;
-    if (requiredSize > 5000) zoom = 12;
-    if (requiredSize > 10000) zoom = 11;
+    if (estimatedWidth > 5000) zoom = 12;
+    if (estimatedWidth > 10000) zoom = 11;
     initMap(loc.lat, loc.lon, zoom);
 
+    // Fetch roads covering a radius large enough for the text
     setStatus('🛣️ キャンバス(道路網)を準備中...', 40);
-    const fetchRadius = Math.max(3000, requiredSize);
+    const fetchRadius = Math.max(3000, estimatedWidth);
     const ways = await fetchRoads(loc.lat, loc.lon, fetchRadius);
 
     if (ways.length === 0) throw new Error('道路データが取得できませんでした');
