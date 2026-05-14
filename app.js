@@ -255,13 +255,14 @@ async function animateDrawing(traceResults, theme) {
         el.style.transition = 'stroke-dashoffset 0.4s ease-out';
         el.style.strokeDashoffset = '0';
         
-        // アニメーション完了後にダッシュ設定を解除（ズームインした際に線が途切れるバグを修正）
+        // アニメーション完了後にダッシュ設定を完全に解除（ズーム時の途切れを修正）
         setTimeout(() => {
           if (el && el.style) {
-            el.style.strokeDasharray = 'none';
-            el.style.transition = 'none';
+            el.style.strokeDasharray = '';
+            el.style.strokeDashoffset = '';
+            el.style.transition = '';
           }
-        }, 450);
+        }, 500);
       }
       
       drawnLayers.push(poly);
