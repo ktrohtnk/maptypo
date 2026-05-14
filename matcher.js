@@ -96,6 +96,54 @@ const TEMPLATES = {
   'ー': [[[0.1, 0.5], [0.9, 0.5]]]
 };
 
+// Dynamically add Dakuten (濁音), Handakuten (半濁音), and small characters
+(function() {
+  const DAKUTEN_MAP = {
+    'ガ':'カ', 'ギ':'キ', 'グ':'ク', 'ゲ':'ケ', 'ゴ':'コ',
+    'ザ':'サ', 'ジ':'シ', 'ズ':'ス', 'ゼ':'セ', 'ゾ':'ソ',
+    'ダ':'タ', 'ヂ':'チ', 'ヅ':'ツ', 'デ':'テ', 'ド':'ト',
+    'バ':'ハ', 'ビ':'ヒ', 'ブ':'フ', 'ベ':'ヘ', 'ボ':'ホ',
+    'ヴ':'ウ'
+  };
+  const HANDAKUTEN_MAP = {
+    'パ':'ハ', 'ピ':'ヒ', 'プ':'フ', 'ペ':'ヘ', 'ポ':'ホ'
+  };
+  const SMALL_MAP = {
+    'ァ':'ア', 'ィ':'イ', 'ゥ':'ウ', 'ェ':'エ', 'ォ':'オ',
+    'ッ':'ツ', 'ャ':'ヤ', 'ュ':'ユ', 'ョ':'ヨ'
+  };
+
+  for (const dakuten in DAKUTEN_MAP) {
+    const base = DAKUTEN_MAP[dakuten];
+    if (TEMPLATES[base]) {
+      // Scale base character to 85% and shift down to make room for dots
+      const scaledBase = TEMPLATES[base].map(stroke => stroke.map(p => [p[0] * 0.9, p[1] * 0.9 + 0.1]));
+      // Add two short diagonal strokes (゛) at top right
+      const dots = [[[0.8, 0.1], [0.95, 0.15]], [[0.85, 0.2], [1.0, 0.25]]];
+      TEMPLATES[dakuten] = scaledBase.concat(dots);
+    }
+  }
+
+  for (const handaku in HANDAKUTEN_MAP) {
+    const base = HANDAKUTEN_MAP[handaku];
+    if (TEMPLATES[base]) {
+      // Scale base character to 85% and shift down
+      const scaledBase = TEMPLATES[base].map(stroke => stroke.map(p => [p[0] * 0.9, p[1] * 0.9 + 0.1]));
+      // Add a small circle/square (゜) at top right
+      const circle = [[[0.8, 0.1], [0.95, 0.1], [0.95, 0.25], [0.8, 0.25], [0.8, 0.1]]];
+      TEMPLATES[handaku] = scaledBase.concat(circle);
+    }
+  }
+
+  for (const small in SMALL_MAP) {
+    const base = SMALL_MAP[small];
+    if (TEMPLATES[base]) {
+      // Scale to 60% and move to the bottom right quadrant
+      TEMPLATES[small] = TEMPLATES[base].map(stroke => stroke.map(p => [p[0] * 0.6 + 0.4, p[1] * 0.6 + 0.4]));
+    }
+  }
+})();
+
 // ─── Graph Builder ───────────────────────────────────────────────────────────
 
 function distance(lat1, lon1, lat2, lon2) {
