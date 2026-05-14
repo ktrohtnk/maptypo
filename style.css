@@ -76,3 +76,40 @@ textarea { resize: vertical; min-height: 80px; }
 .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .hidden { display: none !important; }
+
+/* Responsive Design for Mobile */
+@media screen and (max-width: 768px) {
+  #main-layout {
+    display: flex;
+    flex-direction: column-reverse;
+  }
+
+  #sidebar-left {
+    width: 100%;
+    flex: none;
+    height: 45vh; /* 下部45%をコントロールパネルに */
+    overflow-y: auto; /* スクロール可能に */
+    padding: 24px 20px;
+    border-right: none;
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -4px 15px rgba(0,0,0,0.03);
+  }
+
+  #map-area {
+    flex: 1; /* 上部残りのスペースを地図に */
+    height: 55vh;
+  }
+
+  #header {
+    height: 50px;
+    padding: 0 16px;
+  }
+  
+  .sidebar-header {
+    display: none; /* スマホではヘッダーのタイトルを隠して省スペース化 */
+  }
+
+  .primary-btn {
+    padding: 14px;
+  }
+}
