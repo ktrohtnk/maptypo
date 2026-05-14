@@ -5,6 +5,8 @@
 
 let map = null;
 let drawnLayers = [];
+let lastTraceResults = null;
+let lastTheme = 'minimal';
 
 const OVERPASS_ENDPOINTS = [
   'https://overpass-api.de/api/interpreter',
@@ -199,6 +201,8 @@ async function startTrace() {
     setStatus('Rendering trace...', 90);
     
     // Animate the drawing
+    lastTraceResults = traceResults;
+    lastTheme = theme;
     await animateDrawing(traceResults, theme);
 
     setStatus('Trace complete.', 100);
@@ -302,7 +306,7 @@ async function animateDrawing(traceResults, theme) {
 
 function clearTrace() {
   clearMap();
-  // localStorageのキャッシュもクリアする
+  lastTraceResults = null;
   Object.keys(localStorage).forEach(key => {
     if (key.startsWith('maptypo_cache_')) {
       localStorage.removeItem(key);
@@ -311,5 +315,71 @@ function clearTrace() {
   document.getElementById('status-bar').classList.add('hidden');
 }
 
+function downloadSVG() {
+  if (!lastTraceResults || lastTraceResults.length === 0) {
+    return alert('先にGenerateで文字を描画してください');
+  }
+
+  // 全座標からバウンディングボックスを計算
+  let minLat = Infinity, maxLat = -Infinity, minLon = Infinity, maxLon = -Infinity;
+  for (const result of lastTraceResults) {
+    for (const path of result.paths) {
+      for (const p of path) {
+        if (!Array.isArray(p) || p.length < 2 || isNaN(p[0]) || isNaN(p[1])) continue;
+        minLat = Math.min(minLat, p[0]);
+        maxLat = Math.max(maxLat, p[0]);
+        minLon = Math.min(minLon, p[1]);
+        maxLon = Math.max(maxLon, p[1]);
+      }
+    }
+  }
+
+  // 緯度経度をSVGのピクセル座標に変換するスケール
+  const padding = 60;
+  const svgWidth = 1200;
+  const latRange = maxLat - minLat || 0.001;
+  const lonRange = maxLon - minLon || 0.001;
+  const scale = (svgWidth - padding * 2) / lonRange;
+  const svgHeight = latRange * scale + padding * 2;
+
+  const toX = lon => (lon - minLon) * scale + padding;
+  const toY = lat => (maxLat - lat) * scale + padding; // lat is inverted
+
+  // テーマに合わせた色
+  let colors = ['#E24F33', '#1D1D1F', '#386641'];
+  if (lastTheme === 'cyberpunk') colors = ['#ff2a6d', '#05d9e8', '#01ffc3'];
+  else if (lastTheme === 'monochrome') colors = ['#1D1D1F'];
+  const bgColor = lastTheme === 'cyberpunk' ? '#0d0d0d' : '#F5F5F0';
+
+  let pathsSvg = '';
+  let colorIdx = 0;
+  for (const result of lastTraceResults) {
+    const color = colors[colorIdx % colors.length];
+    colorIdx++;
+    for (const path of result.paths) {
+      const points = path
+        .filter(p => Array.isArray(p) && p.length >= 2 && !isNaN(p[0]) && !isNaN(p[1]))
+        .map(p => `${toX(p[1]).toFixed(1)},${toY(p[0]).toFixed(1)}`)
+        .join(' ');
+      if (!points) continue;
+      pathsSvg += `  <polyline points="${points}" fill="none" stroke="${color}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />\n`;
+    }
+  }
+
+  const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${Math.round(svgHeight)}" viewBox="0 0 ${svgWidth} ${Math.round(svgHeight)}">
+  <rect width="100%" height="100%" fill="${bgColor}" />
+${pathsSvg}</svg>`;
+
+  const blob = new Blob([svg], { type: 'image/svg+xml' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'road-tracer.svg';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 window.startTrace = startTrace;
 window.clearTrace = clearTrace;
+window.downloadSVG = downloadSVG;
