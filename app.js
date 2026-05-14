@@ -241,7 +241,7 @@ async function startTrace() {
   }
 }
 
-async function animateDrawing(traceResults, theme) {
+async function animateDrawing(traceResults, theme, animationId) {
   let colors = ['#E24F33', '#1D1D1F', '#386641']; // Minimalist functional colors
   if (theme === 'cyberpunk') {
     colors = ['#ff2a6d', '#05d9e8', '#01ffc3']; // Cyberpunk neon colors
