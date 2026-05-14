@@ -25,11 +25,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const textInput = document.getElementById('target-chars-input');
   
   textInput.addEventListener('focus', function() {
-    if (this.value === 'ROAD\nTRACER') this.value = '';
+    if (this.value === 'ROAD\nTRACER') {
+      this.value = '';
+      clearTrace();
+    }
   });
   
   addressInput.addEventListener('focus', function() {
-    if (this.value === '福岡市 薬院') this.value = '';
+    if (this.value === '福岡市 薬院') {
+      this.value = '';
+      clearTrace();
+    }
   });
   
   // ページ読み込み完了時に自動的にプレビュー描画を開始する
