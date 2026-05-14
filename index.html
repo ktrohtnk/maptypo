@@ -7,14 +7,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Space+Mono:wght@700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="style.css?v=5.3" />
+  <link rel="stylesheet" href="style.css?v=5.4" />
 </head>
 <body>
   <div id="app">
     <header id="header">
       <div class="logo">
         <span class="logo-icon">🗺️</span>
-        <span class="logo-text">ROAD TRACER <span class="version">v5.3 Generative</span></span>
+        <span class="logo-text">ROAD TRACER <span class="version">v5.4 Generative</span></span>
       </div>
     </header>
 
@@ -30,7 +30,7 @@
           <div class="filter-group">
             <label class="filter-label">Location</label>
             <div class="input-wrap">
-              <textarea id="address-input" placeholder="e.g. Sapporo, Japan" rows="2" style="resize: vertical;">札幌市 中央区</textarea>
+              <textarea id="address-input" placeholder="e.g. Moji, Fukuoka" rows="2" style="resize: vertical;">北九州市 門司区</textarea>
             </div>
           </div>
 
@@ -45,8 +45,8 @@
             <label class="filter-label">Scale</label>
             <select id="size-select">
               <option value="200">Small (200m)</option>
-              <option value="500">Medium (500m)</option>
-              <option value="1000" selected>Large (1km)</option>
+              <option value="500" selected>Medium (500m)</option>
+              <option value="1000">Large (1km)</option>
               <option value="2000">Huge (2km)</option>
             </select>
           </div>
@@ -89,7 +89,7 @@
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="matcher.js?v=5.3"></script>
-  <script src="app.js?v=5.3"></script>
+  <script src="matcher.js?v=5.4"></script>
+  <script src="app.js?v=5.4"></script>
 </body>
 </html>
