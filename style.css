@@ -51,6 +51,15 @@ textarea { resize: vertical; min-height: 80px; }
 .primary-btn:hover { background: var(--accent); }
 .primary-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+.btn-row { display: flex; gap: 8px; }
+.btn-row .primary-btn { flex: 1; }
+.secondary-btn {
+  background: transparent; color: var(--text2); border: 1px solid var(--border);
+  padding: 16px 20px; border-radius: 6px; font-weight: 500; cursor: pointer; font-size: 0.95rem;
+  transition: all 0.2s;
+}
+.secondary-btn:hover { border-color: var(--text); color: var(--text); }
+
 #status-bar { margin-top: auto; }
 #status-text { font-size: 0.8rem; color: var(--text2); text-align: center; margin-bottom: 10px; }
 .progress-bar { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }

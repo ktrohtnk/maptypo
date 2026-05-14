@@ -300,4 +300,16 @@ async function animateDrawing(traceResults, theme) {
   }
 }
 
+function clearTrace() {
+  clearMap();
+  // localStorageのキャッシュもクリアする
+  Object.keys(localStorage).forEach(key => {
+    if (key.startsWith('maptypo_cache_')) {
+      localStorage.removeItem(key);
+    }
+  });
+  document.getElementById('status-bar').classList.add('hidden');
+}
+
 window.startTrace = startTrace;
+window.clearTrace = clearTrace;

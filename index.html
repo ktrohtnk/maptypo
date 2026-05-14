@@ -68,10 +68,13 @@
             </select>
           </div>
 
-          <button id="search-btn" class="primary-btn" onclick="startTrace()">
-            <span id="search-btn-text">Generate</span>
-            <span id="search-spinner" class="spinner hidden"></span>
-          </button>
+          <div class="btn-row">
+            <button id="search-btn" class="primary-btn" onclick="startTrace()">
+              <span id="search-btn-text">Generate</span>
+              <span id="search-spinner" class="spinner hidden"></span>
+            </button>
+            <button id="clear-btn" class="secondary-btn" onclick="clearTrace()">Clear</button>
+          </div>
         </div>
 
         <div id="status-bar" class="hidden">
