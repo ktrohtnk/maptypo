@@ -252,17 +252,17 @@ async function animateDrawing(traceResults, theme) {
         el.style.strokeDasharray = length;
         el.style.strokeDashoffset = length;
         el.getBoundingClientRect(); // trigger reflow
-        el.style.transition = 'stroke-dashoffset 1.5s ease-in-out';
+        el.style.transition = 'stroke-dashoffset 0.4s ease-out';
         el.style.strokeDashoffset = '0';
       }
       
       drawnLayers.push(poly);
 
       // Wait a bit before starting next stroke for writing effect
-      await new Promise(r => setTimeout(r, 600));
+      await new Promise(r => setTimeout(r, 100)); // drastically reduced from 600ms
     }
     // Pause between letters
-    await new Promise(r => setTimeout(r, 400));
+    await new Promise(r => setTimeout(r, 150)); // drastically reduced from 400ms
   }
 }
 
