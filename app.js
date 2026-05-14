@@ -124,6 +124,24 @@ async function startTrace() {
   const drawStyle = document.getElementById('style-select').value;
 
   if (!address || !text) return alert('場所と文字を入力してください');
+
+  // キャッシュキーの作成（住所・文字・サイズ・スタイルが同じならキャッシュを使う）
+  const cacheKey = `maptypo_cache_${btoa(unescape(encodeURIComponent(address + text + letterSize + drawStyle)))}`;
+  const cached = localStorage.getItem(cacheKey);
+
+  if (cached) {
+    try {
+      const { loc, zoom, traceResults } = JSON.parse(cached);
+      initMap(loc.lat, loc.lon, zoom, theme);
+      setStatus('Trace loaded from cache...', 90);
+      await animateDrawing(traceResults, theme);
+      setStatus('Trace complete.', 100);
+      setTimeout(() => document.getElementById('status-bar').classList.add('hidden'), 3000);
+      return;
+    } catch (e) {
+      console.warn('Cache parsing failed, fetching fresh data...', e);
+    }
+  }
   
   setBtn(true);
   try {
@@ -170,6 +188,13 @@ async function startTrace() {
     // Use the potentially scaled-down actualLetterSize to prevent overlapping
     const isConnected = drawStyle === 'connected';
     const traceResults = RoadTracer.traceText(text, [loc.lat, loc.lon], actualLetterSize, ways, isConnected);
+
+    // 取得した結果をキャッシュに保存して次回を爆速にする
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify({ loc, zoom, traceResults }));
+    } catch (e) {
+      console.warn('Could not save to localStorage', e);
+    }
 
     setStatus('Rendering trace...', 90);
     
