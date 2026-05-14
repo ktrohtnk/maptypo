@@ -20,6 +20,18 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('address-input').addEventListener('keydown', handleEnter);
   document.getElementById('target-chars-input').addEventListener('keydown', handleEnter);
   
+  // オープニング文字列をフォーカス時に自動消去する
+  const addressInput = document.getElementById('address-input');
+  const textInput = document.getElementById('target-chars-input');
+  
+  textInput.addEventListener('focus', function() {
+    if (this.value === 'ROAD\nTRACER') this.value = '';
+  });
+  
+  addressInput.addEventListener('focus', function() {
+    if (this.value === '福岡市 薬院') this.value = '';
+  });
+  
   // ページ読み込み完了時に自動的にプレビュー描画を開始する
   setTimeout(() => startTrace(), 500);
 });
