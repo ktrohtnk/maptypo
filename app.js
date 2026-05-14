@@ -254,6 +254,14 @@ async function animateDrawing(traceResults, theme) {
         el.getBoundingClientRect(); // trigger reflow
         el.style.transition = 'stroke-dashoffset 0.4s ease-out';
         el.style.strokeDashoffset = '0';
+        
+        // アニメーション完了後にダッシュ設定を解除（ズームインした際に線が途切れるバグを修正）
+        setTimeout(() => {
+          if (el && el.style) {
+            el.style.strokeDasharray = 'none';
+            el.style.transition = 'none';
+          }
+        }, 450);
       }
       
       drawnLayers.push(poly);
