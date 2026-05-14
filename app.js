@@ -57,14 +57,11 @@ async function geocode(address) {
 }
 
 async function fetchRoads(lat, lon, radiusM) {
-  // 安全のため、最大半径をさらに2000m（4km四方）に制限して確実なレスポンスを担保
-  const safeRadius = Math.min(radiusM, 2000);
+  // Overpass APIの安定性とデータ精度のバランスを取るため、最大半径を3500m（7km四方）に設定
+  const safeRadius = Math.min(radiusM, 3500);
   
-  // 動的LOD
-  let highwayTypes = "^(motorway|trunk|primary|secondary|tertiary|residential|unclassified)$";
-  if (safeRadius > 1500) {
-    highwayTypes = "^(motorway|trunk|primary|secondary|tertiary)$";
-  }
+  // 精度低下（方眼が粗くなる）を防ぐため、常に生活道路（residential）を含める
+  const highwayTypes = "^(motorway|trunk|primary|secondary|tertiary|residential|unclassified)$";
 
   const dLat = safeRadius / 111320, dLon = safeRadius / (111320 * Math.cos(lat * Math.PI / 180));
   const query = `[out:json][timeout:25];way["highway"~"${highwayTypes}"](${lat-dLat},${lon-dLon},${lat+dLat},${lon+dLon});out geom;`;
@@ -88,16 +85,26 @@ async function fetchRoads(lat, lon, radiusM) {
   throw new Error('現在、世界の地図サーバー全体が大変混雑しており、データが取得できませんでした。3〜5分ほどお待ちいただいてから再度お試しください。');
 }
 
-function initMap(lat, lon, zoom) {
+function initMap(lat, lon, zoom, theme) {
   if (!map) {
     map = L.map('map', { zoomControl: false }).setView([lat, lon], zoom);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '© OpenStreetMap & CARTO', maxZoom: 19
-    }).addTo(map);
     L.control.zoom({ position: 'bottomright' }).addTo(map);
   } else {
     map.setView([lat, lon], zoom);
   }
+
+  // 古い地図レイヤーを削除
+  map.eachLayer(layer => {
+    if (layer instanceof L.TileLayer) {
+      map.removeLayer(layer);
+    }
+  });
+
+  // テーマに合わせて地図の背景色（タイル）を変更
+  const mapStyle = theme === 'cyberpunk' ? 'dark_all' : 'light_all';
+  L.tileLayer(`https://{s}.basemaps.cartocdn.com/${mapStyle}/{z}/{x}/{y}{r}.png`, {
+    attribution: '© OpenStreetMap & CARTO', maxZoom: 19
+  }).addTo(map);
 }
 
 function clearMap() {
@@ -110,43 +117,63 @@ async function startTrace() {
   // \n（改行）を許可するように正規表現を変更
   const text = document.getElementById('target-chars-input').value.toUpperCase().replace(/[^A-Z0-9 \n]/g, '');
   const letterSize = parseInt(document.getElementById('size-select').value);
+  const theme = document.getElementById('theme-select').value;
+  const drawStyle = document.getElementById('style-select').value;
 
   if (!address || !text) return alert('場所と文字を入力してください');
   
   setBtn(true);
   try {
-    setStatus('📍 場所を検索中...', 10);
+    setStatus('Searching location...', 10);
     const loc = await geocode(address);
     
+    // キャンバス（地図データ）の取得範囲の安全上限
+    const MAX_RADIUS = 3500; 
+
     // Adjust zoom and fetch radius based on true text block dimensions
     const lines = text.split('\n');
     const maxLineLen = Math.max(...lines.map(l => l.length));
-    const estimatedWidth = maxLineLen * letterSize * 1.5;
-    const estimatedHeight = lines.length * letterSize * 1.5;
+    
+    // 文字が取得範囲をはみ出さないように、必要に応じて文字サイズを自動縮小する
+    let actualLetterSize = letterSize;
+    let estimatedWidth = maxLineLen * actualLetterSize * 1.5;
+    let estimatedHeight = lines.length * actualLetterSize * 1.5;
+    
+    // 半径（横幅/2 または 縦幅/2）がMAX_RADIUSを超える場合は縮小
+    if (estimatedWidth / 2 > MAX_RADIUS || estimatedHeight / 2 > MAX_RADIUS) {
+      const scaleW = (MAX_RADIUS * 2) / estimatedWidth;
+      const scaleH = (MAX_RADIUS * 2) / estimatedHeight;
+      actualLetterSize = actualLetterSize * Math.min(scaleW, scaleH) * 0.9; // 10%のマージンを持たせる
+      
+      // 再計算
+      estimatedWidth = maxLineLen * actualLetterSize * 1.5;
+      estimatedHeight = lines.length * actualLetterSize * 1.5;
+    }
+
     const requiredSize = Math.max(estimatedWidth, estimatedHeight);
     
     let zoom = 14;
+    if (requiredSize > 3000) zoom = 13;
     if (requiredSize > 5000) zoom = 12;
-    if (requiredSize > 10000) zoom = 11;
-    initMap(loc.lat, loc.lon, zoom);
+    initMap(loc.lat, loc.lon, zoom, theme);
 
-    setStatus('🛣️ キャンバス(道路網)を準備中...', 40);
-    const fetchRadius = Math.max(3000, requiredSize);
+    setStatus('Fetching road network...', 40);
+    const fetchRadius = Math.max(2000, requiredSize / 2 + 500); // 描画範囲より少し広めに取得
     const ways = await fetchRoads(loc.lat, loc.lon, fetchRadius);
 
     if (ways.length === 0) throw new Error('道路データが取得できませんでした');
 
-    setStatus('🧠 ジェネレーティブ・トレース実行中...', 70);
-    
-    // Run the Generative Tracer (RoadWalker)
-    const traceResults = RoadTracer.traceText(text, [loc.lat, loc.lon], letterSize, ways);
+    setStatus('Mapping typography...', 70);
+    // Use the potentially scaled-down actualLetterSize to prevent overlapping
+    const isConnected = drawStyle === 'connected';
+    const traceResults = RoadTracer.traceText(text, [loc.lat, loc.lon], actualLetterSize, ways, isConnected);
 
-    setStatus('✨ 描画アニメーション...', 90);
+    setStatus('Rendering trace...', 90);
     
     // Animate the drawing
-    await animateDrawing(traceResults);
+    await animateDrawing(traceResults, theme);
 
-    setStatus('✅ 描画完了！', 100);
+    setStatus('Trace complete.', 100);
     setTimeout(() => document.getElementById('status-bar').classList.add('hidden'), 3000);
 
   } catch (e) {
@@ -158,8 +185,16 @@ async function startTrace() {
   }
 }
 
-async function animateDrawing(traceResults) {
-  const colors = ['#ff2a6d', '#05d9e8', '#01ffc3']; // Cyberpunk neon colors
+async function animateDrawing(traceResults, theme) {
+  let colors = ['#E24F33', '#1D1D1F', '#386641']; // Minimalist functional colors
+  if (theme === 'cyberpunk') {
+    colors = ['#ff2a6d', '#05d9e8', '#01ffc3']; // Cyberpunk neon colors
+  } else if (theme === 'monochrome') {
+    colors = ['#1D1D1F']; // Pure monochrome
+  }
+  
+  const shadowColor = theme === 'cyberpunk' ? '#ffffff' : '#000000';
+  const shadowOpacity = theme === 'cyberpunk' ? 0.1 : 0.2;
   let colorIdx = 0;
 
   // 1. 全ての描画座標を収集し、カメラを完璧にフィットさせる（自動ズーム＆センタリング）
@@ -195,7 +230,7 @@ async function animateDrawing(traceResults) {
       if (validPath.length < 2) continue;
 
       // Draw background shadow
-      const shadow = L.polyline(validPath, { color: '#000', weight: 10, opacity: 0.3, lineCap: 'round', lineJoin: 'round' }).addTo(map);
+      const shadow = L.polyline(validPath, { color: shadowColor, weight: 10, opacity: shadowOpacity, lineCap: 'round', lineJoin: 'round' }).addTo(map);
       drawnLayers.push(shadow);
 
       // Draw animated stroke

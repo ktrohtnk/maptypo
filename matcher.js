@@ -122,7 +122,7 @@ function walkStroke(startLat, startLon, endLat, endLon, graph, nodes) {
   let bestPath = [startNode];
   let closestDistToTarget = Infinity;
   let iterations = 0;
-  const MAX_ITERATIONS = 800; // Prevent infinite loops in complex cities
+  const MAX_ITERATIONS = 2500; // Increased to allow long connecting paths between letters
 
   while (openSet.length > 0 && iterations++ < MAX_ITERATIONS) {
     // Sort to get lowest f (A* mechanic)
@@ -190,8 +190,9 @@ function walkStroke(startLat, startLon, endLat, endLon, graph, nodes) {
  * @param {Array} mapCenter [lat, lon]
  * @param {number} letterSizeMeters 
  * @param {Array} allWays 
+ * @param {boolean} connectLetters
  */
-function traceText(text, mapCenter, letterSizeMeters, allWays) {
+function traceText(text, mapCenter, letterSizeMeters, allWays, connectLetters = false) {
   const { graph, nodes } = buildGraph(allWays);
   const resultPaths = [];
 
@@ -211,7 +212,14 @@ function traceText(text, mapCenter, letterSizeMeters, allWays) {
   const totalH = (lines.length * letterH) + ((lines.length - 1) * gapH);
   let currentLat = mapCenter[0] + (totalH / 2); // Start from the top edge
 
+  let prevCharEnd = null;
+  let prevCharBBox = null;
+
   for (const line of lines) {
+    // 改行時には繋がりをリセットする（筆記体のルール）
+    prevCharEnd = null;
+    prevCharBBox = null;
+
     // If it's a completely empty line, just move the cursor down
     if (!line.trim()) {
       currentLat -= (letterH + gapH);
@@ -226,18 +234,29 @@ function traceText(text, mapCenter, letterSizeMeters, allWays) {
     const baseLat = currentLat - letterH; // Bottom edge of the current line
 
     for (const char of chars) {
-      if (char === ' ') { currentLon += letterW + gapW; continue; }
+      if (char === ' ') { 
+        currentLon += letterW + gapW; 
+        // スペース（単語の区切り）では繋がりをリセットする
+        prevCharEnd = null;
+        prevCharBBox = null;
+        continue; 
+      }
       
       const template = TEMPLATES[char] || TEMPLATES['O']; // Fallback
       
+      // ユーザーの要望に基づく「上下のマス目ずらし」
+      const verticalStagger = (Math.random() - 0.5) * letterH * 0.5; // 上下に最大25%ずらす
+      
       const charBBox = {
-        minLat: baseLat,
-        maxLat: baseLat + letterH,
+        minLat: baseLat + verticalStagger,
+        maxLat: baseLat + letterH + verticalStagger,
         minLon: currentLon,
         maxLon: currentLon + letterW
       };
 
       const strokePaths = [];
+      let firstPointLat = null, firstPointLon = null;
+      let lastPointLat = null, lastPointLon = null;
 
       // Map template 0.0-1.0 coords to geographical coords and trace
       for (const stroke of template) {
@@ -255,6 +274,11 @@ function traceText(text, mapCenter, letterSizeMeters, allWays) {
           const endLat = charBBox.maxLat - (p2[1] * letterH);
           const endLon = charBBox.minLon + (p2[0] * letterW);
 
+          if (firstPointLat === null) {
+            firstPointLat = startLat;
+            firstPointLon = startLon;
+          }
+
           // Walk the road network!
           const roadSegment = walkStroke(startLat, startLon, endLat, endLon, graph, nodes);
           
@@ -265,9 +289,50 @@ function traceText(text, mapCenter, letterSizeMeters, allWays) {
             } else {
               currentPath = roadSegment;
             }
+            lastPointLat = roadSegment[roadSegment.length - 1][0];
+            lastPointLon = roadSegment[roadSegment.length - 1][1];
           }
         }
         if (currentPath.length > 0) strokePaths.push(currentPath);
+      }
+      
+      // If connected mode is ON, draw a stylized 'bridge' path
+      // from the bottom-right of the previous letter to the bottom-left of the current letter
+      if (connectLetters && prevCharEnd && firstPointLat !== null && prevCharBBox) {
+        // 1. 描き終わりから右下(Exit)へ
+        const exitLat = prevCharBBox.maxLat - (letterH * 0.8);
+        const exitLon = prevCharBBox.maxLon;
+        
+        // 2. 次の文字の左下(Entry)へ
+        const entryLat = charBBox.maxLat - (letterH * 0.8);
+        const entryLon = charBBox.minLon;
+        
+        const bridge1 = walkStroke(prevCharEnd[0], prevCharEnd[1], exitLat, exitLon, graph, nodes);
+        const bridge2 = walkStroke(exitLat, exitLon, entryLat, entryLon, graph, nodes);
+        const bridge3 = walkStroke(entryLat, entryLon, firstPointLat, firstPointLon, graph, nodes);
+        
+        // 無理なところ（道が途切れている等）は繋げないようにする
+        // A*探索が目的地（約50m以内）に到達できたかチェック
+        const b1End = bridge1[bridge1.length - 1];
+        const b2End = bridge2[bridge2.length - 1];
+        const b3End = bridge3[bridge3.length - 1];
+        
+        const d1 = b1End ? distance(b1End[0], b1End[1], exitLat, exitLon) : Infinity;
+        const d2 = b2End ? distance(b2End[0], b2End[1], entryLat, entryLon) : Infinity;
+        const d3 = b3End ? distance(b3End[0], b3End[1], firstPointLat, firstPointLon) : Infinity;
+
+        // 3つの橋渡し全てが目標地点に到達できた場合のみ、繋がりを描画する
+        if (d1 < 0.0005 && d2 < 0.0005 && d3 < 0.0005) {
+          // Prepend in reverse order so they draw BEFORE the letter itself
+          if (bridge3.length > 0) strokePaths.unshift(bridge3);
+          if (bridge2.length > 0) strokePaths.unshift(bridge2);
+          if (bridge1.length > 0) strokePaths.unshift(bridge1);
+        }
+      }
+
+      if (lastPointLat !== null) {
+        prevCharEnd = [lastPointLat, lastPointLon];
+        prevCharBBox = charBBox; // Save bbox for the next bridge
       }
       
       resultPaths.push({ char, paths: strokePaths, bbox: charBBox });

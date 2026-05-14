@@ -22,43 +22,60 @@
       <!-- Controls -->
       <aside id="sidebar-left">
         <div class="sidebar-header">
-          <h1 class="search-title">地図上に文字を描く</h1>
-          <p class="search-desc">実際の道路をなぞって文字を生成します</p>
+          <h1 class="search-title">Map Typography</h1>
+          <p class="search-desc">Generative drawing engine using real road networks.</p>
         </div>
 
         <div class="search-card">
           <div class="filter-group">
-            <label class="filter-label">📍 キャンバス (場所)</label>
+            <label class="filter-label">Location</label>
             <div class="input-wrap">
-              <textarea id="address-input" placeholder="例：福岡市 六本松" rows="2" style="resize: vertical;">福岡市 六本松</textarea>
+              <textarea id="address-input" placeholder="e.g. Fukuoka, Japan" rows="2" style="resize: vertical;">福岡市 六本松</textarea>
             </div>
           </div>
 
           <div class="filter-group">
-            <label class="filter-label">🔤 描画する文字</label>
+            <label class="filter-label">Text</label>
             <div class="input-wrap">
-              <textarea id="target-chars-input" placeholder="例：ARK&#10;CITY" rows="3" style="resize: vertical;">ARK</textarea>
+              <textarea id="target-chars-input" placeholder="e.g. ARK&#10;CITY" rows="3" style="resize: vertical;">ARK</textarea>
             </div>
           </div>
 
           <div class="filter-group">
-            <label class="filter-label">📏 文字の大きさ</label>
+            <label class="filter-label">Scale</label>
             <select id="size-select">
-              <option value="200">スモール (200m/文字)</option>
-              <option value="500" selected>ミディアム (500m/文字)</option>
-              <option value="1000">ラージ (1km/文字)</option>
-              <option value="2000">特大 (2km/文字)</option>
+              <option value="200">Small (200m)</option>
+              <option value="500" selected>Medium (500m)</option>
+              <option value="1000">Large (1km)</option>
+              <option value="2000">Huge (2km)</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label">Theme</label>
+            <select id="theme-select">
+              <option value="minimal" selected>Minimal (Braun)</option>
+              <option value="cyberpunk">Cyberpunk (Neon)</option>
+              <option value="monochrome">Monochrome</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label">Style</label>
+            <select id="style-select">
+              <option value="normal" selected>Normal (Separate)</option>
+              <option value="connected">Connected (One-line)</option>
             </select>
           </div>
 
           <button id="search-btn" class="primary-btn" onclick="startTrace()">
-            <span id="search-btn-text">🖋️ 描画を開始する</span>
+            <span id="search-btn-text">Generate</span>
             <span id="search-spinner" class="spinner hidden"></span>
           </button>
         </div>
 
         <div id="status-bar" class="hidden">
-          <div id="status-text">道路網を解析中...</div>
+          <div id="status-text">Processing...</div>
           <div class="progress-bar"><div id="progress-fill" style="width:0%"></div></div>
         </div>
       </aside>
