@@ -7,6 +7,7 @@ let map = null;
 let drawnLayers = [];
 let lastTraceResults = null;
 let lastTheme = 'minimal';
+let currentAnimationId = 0;
 
 const OVERPASS_ENDPOINTS = [
   'https://overpass-api.de/api/interpreter',
@@ -25,14 +26,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const textInput = document.getElementById('target-chars-input');
   
   textInput.addEventListener('focus', function() {
-    if (this.value === 'ROAD\nTRACER') {
+    if (this.value.replace(/\r/g, '') === 'ROAD\nTRACER') {
       this.value = '';
       clearTrace();
     }
   });
   
   addressInput.addEventListener('focus', function() {
-    if (this.value === '福岡市 薬院') {
+    if (this.value.replace(/\r/g, '') === '福岡市 薬院') {
       this.value = '';
       clearTrace();
     }
@@ -222,10 +223,14 @@ async function startTrace() {
     // Animate the drawing
     lastTraceResults = traceResults;
     lastTheme = theme;
-    await animateDrawing(traceResults, theme);
+    currentAnimationId++;
+    const myAnimationId = currentAnimationId;
+    await animateDrawing(traceResults, theme, myAnimationId);
 
-    setStatus('Trace complete.', 100);
-    setTimeout(() => document.getElementById('status-bar').classList.add('hidden'), 3000);
+    if (currentAnimationId === myAnimationId) {
+      setStatus('Trace complete.', 100);
+      setTimeout(() => document.getElementById('status-bar').classList.add('hidden'), 3000);
+    }
 
   } catch (e) {
     console.error(e);
@@ -269,10 +274,14 @@ async function animateDrawing(traceResults, theme) {
 
   // 2. アニメーション描画ループ
   for (const result of traceResults) {
+    if (animationId !== currentAnimationId) return; // Abort if cancelled
+    
     const color = colors[colorIdx % colors.length];
     colorIdx++;
 
     for (const path of result.paths) {
+      if (animationId !== currentAnimationId) return; // Abort if cancelled
+
       // Strongly sanitize the path to ensure Leaflet gets clean numbers
       const validPath = path
         .filter(p => Array.isArray(p) && p.length >= 2 && p[0] != null && p[1] != null && !isNaN(p[0]) && !isNaN(p[1]))
@@ -324,6 +333,7 @@ async function animateDrawing(traceResults, theme) {
 }
 
 function clearTrace() {
+  currentAnimationId++; // アニメーションを中断する
   clearMap();
   lastTraceResults = null;
   Object.keys(localStorage).forEach(key => {
