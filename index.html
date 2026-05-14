@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Road Letter Tracer | 道路文字ジェネレーター</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Space+Mono:wght@700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css?v=4.0" />
+</head>
+<body>
+  <div id="app">
+    <header id="header">
+      <div class="logo">
+        <span class="logo-icon">🗺️</span>
+        <span class="logo-text">ROAD TRACER <span class="version">v4.0 Generative</span></span>
+      </div>
+    </header>
+
+    <div id="main-layout">
+      <!-- Controls -->
+      <aside id="sidebar-left">
+        <div class="sidebar-header">
+          <h1 class="search-title">地図上に文字を描く</h1>
+          <p class="search-desc">実際の道路をなぞって文字を生成します</p>
+        </div>
+
+        <div class="search-card">
+          <div class="filter-group">
+            <label class="filter-label">📍 キャンバス (場所)</label>
+            <div class="input-wrap">
+              <textarea id="address-input" placeholder="例：福岡市 六本松" rows="2" style="resize: vertical;">福岡市 六本松</textarea>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label">🔤 描画する文字</label>
+            <div class="input-wrap">
+              <textarea id="target-chars-input" placeholder="例：ARK&#10;CITY" rows="3" style="resize: vertical;">ARK</textarea>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label">📏 文字の大きさ</label>
+            <select id="size-select">
+              <option value="200">スモール (200m/文字)</option>
+              <option value="500" selected>ミディアム (500m/文字)</option>
+              <option value="1000">ラージ (1km/文字)</option>
+              <option value="2000">特大 (2km/文字)</option>
+            </select>
+          </div>
+
+          <button id="search-btn" class="primary-btn" onclick="startTrace()">
+            <span id="search-btn-text">🖋️ 描画を開始する</span>
+            <span id="search-spinner" class="spinner hidden"></span>
+          </button>
+        </div>
+
+        <div id="status-bar" class="hidden">
+          <div id="status-text">道路網を解析中...</div>
+          <div class="progress-bar"><div id="progress-fill" style="width:0%"></div></div>
+        </div>
+      </aside>
+
+      <!-- Map Canvas -->
+      <main id="map-area">
+        <div id="map"></div>
+        <div id="map-overlay" class="hidden"></div>
+      </main>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="matcher.js?v=4.3"></script>
+  <script src="app.js?v=4.3"></script>
+</body>
+</html>
