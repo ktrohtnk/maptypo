@@ -195,7 +195,7 @@ function traceText(text, mapCenter, letterSizeMeters, allWays) {
   const { graph, nodes } = buildGraph(allWays);
   const resultPaths = [];
 
-  const chars = text.toUpperCase().split('');
+  const lines = text.toUpperCase().split('\n');
   
   // Geographical degree conversions
   // 1 degree lat = ~111.32 km
@@ -205,61 +205,78 @@ function traceText(text, mapCenter, letterSizeMeters, allWays) {
   const letterH = letterSizeMeters * dLatPerMeter;
   const letterW = letterSizeMeters * dLonPerMeter;
   const gapW = letterW * 0.3; // Space between letters
+  const gapH = letterH * 0.5; // Space between lines
 
-  const totalW = (chars.length * letterW) + ((chars.length - 1) * gapW);
-  
-  // Start from the left so the whole text is centered
-  let currentLon = mapCenter[1] - (totalW / 2);
-  const baseLat = mapCenter[0] - (letterH / 2); // Bottom edge
+  // Calculate total height to center vertically
+  const totalH = (lines.length * letterH) + ((lines.length - 1) * gapH);
+  let currentLat = mapCenter[0] + (totalH / 2); // Start from the top edge
 
-  for (const char of chars) {
-    if (char === ' ') { currentLon += letterW + gapW; continue; }
-    
-    const template = TEMPLATES[char] || TEMPLATES['O']; // Fallback
-    
-    const charBBox = {
-      minLat: baseLat,
-      maxLat: baseLat + letterH,
-      minLon: currentLon,
-      maxLon: currentLon + letterW
-    };
-
-    const strokePaths = [];
-
-    // Map template 0.0-1.0 coords to geographical coords and trace
-    for (const stroke of template) {
-      if (!stroke || stroke.length < 2) continue;
-      let currentPath = [];
-      
-      for (let i = 0; i < stroke.length - 1; i++) {
-        const p1 = stroke[i];
-        const p2 = stroke[i+1];
-        if (!p1 || !p2 || p1.length < 2 || p2.length < 2) continue;
-        
-        // Y in template is 0.0 (top) to 1.0 (bottom). Map lat is higher=top.
-        const startLat = charBBox.maxLat - (p1[1] * letterH);
-        const startLon = charBBox.minLon + (p1[0] * letterW);
-        const endLat = charBBox.maxLat - (p2[1] * letterH);
-        const endLon = charBBox.minLon + (p2[0] * letterW);
-
-        // Walk the road network!
-        const roadSegment = walkStroke(startLat, startLon, endLat, endLon, graph, nodes);
-        
-        if (roadSegment.length > 0) {
-          if (currentPath.length > 0) {
-            // Join with previous segment of the same stroke
-            currentPath.push(...roadSegment.slice(1));
-          } else {
-            currentPath = roadSegment;
-          }
-        }
-      }
-      if (currentPath.length > 0) strokePaths.push(currentPath);
+  for (const line of lines) {
+    // If it's a completely empty line, just move the cursor down
+    if (!line.trim()) {
+      currentLat -= (letterH + gapH);
+      continue;
     }
     
-    resultPaths.push({ char, paths: strokePaths, bbox: charBBox });
+    const chars = line.split('');
+    const totalW = (chars.length * letterW) + ((chars.length - 1) * gapW);
     
-    currentLon += letterW + gapW; // Move right for next letter
+    // Start from the left so this line is centered horizontally
+    let currentLon = mapCenter[1] - (totalW / 2);
+    const baseLat = currentLat - letterH; // Bottom edge of the current line
+
+    for (const char of chars) {
+      if (char === ' ') { currentLon += letterW + gapW; continue; }
+      
+      const template = TEMPLATES[char] || TEMPLATES['O']; // Fallback
+      
+      const charBBox = {
+        minLat: baseLat,
+        maxLat: baseLat + letterH,
+        minLon: currentLon,
+        maxLon: currentLon + letterW
+      };
+
+      const strokePaths = [];
+
+      // Map template 0.0-1.0 coords to geographical coords and trace
+      for (const stroke of template) {
+        if (!stroke || stroke.length < 2) continue;
+        let currentPath = [];
+        
+        for (let i = 0; i < stroke.length - 1; i++) {
+          const p1 = stroke[i];
+          const p2 = stroke[i+1];
+          if (!p1 || !p2 || p1.length < 2 || p2.length < 2) continue;
+          
+          // Y in template is 0.0 (top) to 1.0 (bottom). Map lat is higher=top.
+          const startLat = charBBox.maxLat - (p1[1] * letterH);
+          const startLon = charBBox.minLon + (p1[0] * letterW);
+          const endLat = charBBox.maxLat - (p2[1] * letterH);
+          const endLon = charBBox.minLon + (p2[0] * letterW);
+
+          // Walk the road network!
+          const roadSegment = walkStroke(startLat, startLon, endLat, endLon, graph, nodes);
+          
+          if (roadSegment.length > 0) {
+            if (currentPath.length > 0) {
+              // Join with previous segment of the same stroke
+              currentPath.push(...roadSegment.slice(1));
+            } else {
+              currentPath = roadSegment;
+            }
+          }
+        }
+        if (currentPath.length > 0) strokePaths.push(currentPath);
+      }
+      
+      resultPaths.push({ char, paths: strokePaths, bbox: charBBox });
+      
+      currentLon += letterW + gapW; // Move right for next letter
+    }
+    
+    // Move down for the next line
+    currentLat -= (letterH + gapH);
   }
 
   return resultPaths;
