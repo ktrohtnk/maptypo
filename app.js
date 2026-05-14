@@ -17,7 +17,13 @@ const OVERPASS_ENDPOINTS = [
 ];
 
 document.addEventListener('DOMContentLoaded', () => {
-  const handleEnter = e => { if (e.key === 'Enter' && !e.isComposing) startTrace(); };
+  const handleEnter = e => { 
+    // Ctrl+Enter または Cmd+Enter のみ実行し、通常のEnterは改行させる
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !e.isComposing) {
+      e.preventDefault();
+      startTrace(); 
+    }
+  };
   document.getElementById('address-input').addEventListener('keydown', handleEnter);
   document.getElementById('target-chars-input').addEventListener('keydown', handleEnter);
   
