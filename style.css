@@ -123,23 +123,53 @@ textarea { resize: vertical; min-height: 80px; }
   }
 }
 
-/* Matrix Coordinate Labels */
-.matrix-coord-label div {
+/* Large Screen Matrix Overlay */
+#matrix-overlay {
+  position: absolute;
+  bottom: 30px;
+  left: 30px;
+  z-index: 1000;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+#matrix-overlay.hidden {
+  display: none;
+}
+
+.matrix-line {
   background-color: #FFFFFF;
   color: #111111;
   font-family: 'Space Mono', monospace;
-  font-size: 10px;
-  line-height: 1.2;
-  padding: 4px 6px;
-  border: 1px solid #111111;
-  border-radius: 2px;
-  box-shadow: 2px 2px 0px rgba(0,0,0,1);
+  font-size: 24px;
+  line-height: 1;
+  padding: 6px 10px;
+  border: 2px solid #111111;
+  box-shadow: 4px 4px 0px rgba(0,0,0,1);
   white-space: nowrap;
   font-weight: 700;
-  opacity: 0.9;
-  letter-spacing: 0.5px;
-  pointer-events: none;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  transition: color 0.3s;
 }
-.matrix-coord-label.resolved div {
-  color: #E24F33; /* Accent color when resolved */
+
+.matrix-line.resolved {
+  color: #E24F33;
+}
+
+/* For dark themes */
+[data-theme="cyberpunk"] .matrix-line,
+[data-theme="monochrome"] .matrix-line {
+  background-color: #111111;
+  color: #FFFFFF;
+  border-color: #FFFFFF;
+  box-shadow: 4px 4px 0px rgba(255,255,255,1);
+}
+[data-theme="cyberpunk"] .matrix-line.resolved {
+  color: #01ffc3;
+}
+[data-theme="monochrome"] .matrix-line.resolved {
+  color: #FFFFFF;
 }
