@@ -28,6 +28,20 @@
 
         <div class="search-card">
           <div class="filter-group">
+            <label class="filter-label">Region</label>
+            <div class="select-wrapper">
+              <select id="region-select">
+                <option value="jp" selected>Japan (日本)</option>
+                <option value="us,ca">North America (北米)</option>
+                <option value="gb,fr,de,it,es,nl,be,ch,at,se,no,dk,fi">Europe (ヨーロッパ)</option>
+                <option value="cn,kr,tw,hk,sg,th,my,id,vn,in">Asia (アジア)</option>
+                <option value="au,nz">Oceania (オセアニア)</option>
+                <option value="">World (すべて)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="filter-group">
             <label class="filter-label">Location</label>
             <div class="input-wrap">
               <textarea id="address-input" placeholder="e.g. Fukuoka, Japan" rows="2" style="resize: vertical;">福岡市 薬院</textarea>

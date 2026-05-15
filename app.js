@@ -61,9 +61,12 @@ function setBtn(loading) {
   document.getElementById('search-spinner').classList.toggle('hidden', !loading);
 }
 
-async function geocode(address) {
+async function geocode(address, regionCode) {
   const fetchGeocode = async (q) => {
-    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1&countrycodes=jp`;
+    let url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`;
+    if (regionCode) {
+      url += `&countrycodes=${regionCode}`;
+    }
     const res = await fetch(url, { headers: { 'User-Agent': 'RoadTracer/1.0' } });
     return await res.json();
   };
@@ -154,10 +157,12 @@ async function startTrace() {
   const theme = document.getElementById('theme-select').value;
   const drawStyle = document.getElementById('style-select').value;
 
+  const regionCode = document.getElementById('region-select') ? document.getElementById('region-select').value : 'jp';
+
   if (!address || !text) return alert('場所と文字を入力してください');
 
-  // キャッシュキーの作成（住所・文字・サイズ・スタイルが同じならキャッシュを使う）
-  const cacheKey = `maptypo_cache_${btoa(unescape(encodeURIComponent(address + text + letterSize + drawStyle)))}`;
+  // キャッシュキーの作成（住所・文字・サイズ・スタイル・地域が同じならキャッシュを使う）
+  const cacheKey = `maptypo_cache_${btoa(unescape(encodeURIComponent(address + text + letterSize + drawStyle + regionCode)))}`;
   const cached = localStorage.getItem(cacheKey);
 
   if (cached) {
@@ -177,7 +182,7 @@ async function startTrace() {
   setBtn(true);
   try {
     setStatus('Searching location...', 10);
-    const loc = await geocode(address);
+    const loc = await geocode(address, regionCode);
     
     // キャンバス（地図データ）の取得範囲の安全上限
     const MAX_RADIUS = 3500; 
