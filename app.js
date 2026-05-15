@@ -45,56 +45,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
-  // ページ読み込み時は、毎回重い道路生成(Overpass API)を走らせるのではなく、
-  // 負荷軽減のためカメラワークとUIアニメーションによる「オープニング」のみ再生する
-  setTimeout(() => playOpeningAnimation(), 100);
+  // 初期表示のデモアニメーション
+  // 事前生成された軽量データを読み込むため、API負荷なしで爆速で完了します
+  setTimeout(() => startTrace(), 100);
 });
 
-function playOpeningAnimation() {
-  const theme = document.getElementById('theme-select').value;
-  // Initialize map at a default tech-looking location (e.g., Tokyo or New York)
-  initMap(35.6812, 139.7671, 14, theme); // Tokyo Station
-
-  // Start a slow zoom and pan for the "opening" feel
-  setTimeout(() => {
-    if (map) map.flyTo([35.6852, 139.7751], 16, { animate: true, duration: 4.0 });
-  }, 500);
-
-  // Matrix overlay fake startup sequence
-  const matrixOverlay = document.getElementById('matrix-overlay');
-  const matrixLat = document.getElementById('matrix-lat');
-  const matrixLon = document.getElementById('matrix-lon');
-  
-  if (matrixOverlay && matrixLat && matrixLon) {
-    matrixOverlay.classList.remove('hidden');
-    matrixLat.classList.remove('resolved');
-    matrixLon.classList.remove('resolved');
-    
-    let ticks = 0;
-    const interval = setInterval(() => {
-      // ユーザーが手動でGenerate（startTrace）ボタンを押したらアニメーションを中止
-      if (currentAnimationId > 0) {
-        clearInterval(interval);
-        matrixOverlay.classList.add('hidden');
-        return;
-      }
-      
-      if (ticks >= 40) {
-        matrixLat.textContent = `SYSTEM READY`;
-        matrixLon.textContent = `AWAITING INPUT`;
-        matrixLat.classList.add('resolved');
-        matrixLon.classList.add('resolved');
-        clearInterval(interval);
-      } else {
-        const rLat = (35.6812 + (Math.random() - 0.5) * 10).toFixed(4);
-        const rLon = (139.7671 + (Math.random() - 0.5) * 10).toFixed(4);
-        matrixLat.textContent = `LAT: ${rLat}`;
-        matrixLon.textContent = `LON: ${rLon}`;
-        ticks++;
-      }
-    }, 50);
-  }
-}
 
 function setStatus(text, pct) {
   document.getElementById('status-bar').classList.remove('hidden');
