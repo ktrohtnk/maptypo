@@ -126,18 +126,19 @@ textarea { resize: vertical; min-height: 80px; }
 /* Technical CAD / Measurement UI Style */
 #matrix-overlay {
   position: absolute;
-  inset: 0; /* Cover entire map area */
-  z-index: 1000;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
   pointer-events: none;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
 }
 #matrix-overlay.hidden {
   display: none;
 }
 
 .matrix-line {
+  position: absolute;
   background-color: #FFFFFF; /* 背景は白 */
   color: #111111;
   font-family: 'Space Mono', monospace;
@@ -150,25 +151,28 @@ textarea { resize: vertical; min-height: 80px; }
   letter-spacing: -0.5px; /* タイトカーニング */
   text-transform: uppercase;
   transition: color 0.2s, background-color 0.2s;
-  position: relative;
 }
 
-/* エッジに寄せるためのボーダー調整 */
+/* エッジに完全に寄せる */
 #matrix-lat {
+  top: 0;
+  left: 0;
+  border-top: none;
   border-left: none;
-  border-bottom: none;
 }
 #matrix-lon {
-  border-right: none;
+  bottom: 0;
+  right: 0;
   border-bottom: none;
+  border-right: none;
 }
 
 /* 測定線（クロスヘア）のアノテーション的装飾 */
 #matrix-lat::after {
   content: '';
   position: absolute;
-  top: -20px;
-  left: 0;
+  bottom: -20px;
+  left: -1px; /* border offset */
   width: 1px;
   height: 20px;
   background-color: #111;
@@ -177,7 +181,7 @@ textarea { resize: vertical; min-height: 80px; }
   content: '';
   position: absolute;
   top: -20px;
-  right: 0;
+  right: -1px; /* border offset */
   width: 1px;
   height: 20px;
   background-color: #111;
