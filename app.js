@@ -229,7 +229,24 @@ async function startTrace() {
   setBtn(true);
   try {
     setStatus('Searching location...', 10);
-    const loc = await geocode(address, regionCode);
+    
+    let loc, ways;
+    // デフォルトの薬院の初期表示はAPIを使わず超軽量・高速に読み込む
+    if (address === '福岡市 薬院' && text === 'ROAD\nTRACER' && regionCode === 'jp') {
+      setStatus('Loading ultra-lightweight map data...', 20);
+      try {
+        const res = await fetch('fukuoka_yakuin_optimized.json');
+        if (!res.ok) throw new Error('File not found');
+        const data = await res.json();
+        loc = data.loc;
+        ways = data.ways;
+      } catch (e) {
+        console.warn('Local data not found, falling back to API', e);
+        loc = await geocode(address, regionCode);
+      }
+    } else {
+      loc = await geocode(address, regionCode);
+    }
     
     // キャンバス（地図データ）の取得範囲の安全上限
     const MAX_RADIUS = 3500; 
@@ -261,9 +278,11 @@ async function startTrace() {
     if (requiredSize > 5000) zoom = 12;
     initMap(loc.lat, loc.lon, zoom, theme);
 
-    setStatus('Fetching road network...', 40);
-    const fetchRadius = Math.max(2000, requiredSize / 2 + 500); // 描画範囲より少し広めに取得
-    const ways = await fetchRoads(loc.lat, loc.lon, fetchRadius);
+    if (!ways) {
+      setStatus('Fetching road network...', 40);
+      const fetchRadius = Math.max(2000, requiredSize / 2 + 500); // 描画範囲より少し広めに取得
+      ways = await fetchRoads(loc.lat, loc.lon, fetchRadius);
+    }
 
     if (ways.length === 0) throw new Error('道路データが取得できませんでした');
 
@@ -272,7 +291,6 @@ async function startTrace() {
     const isConnected = drawStyle === 'connected';
     const traceResults = RoadTracer.traceText(text, [loc.lat, loc.lon], actualLetterSize, ways, isConnected);
 
-    // 取得した結果をキャッシュに保存して次回を爆速にする
     try {
       localStorage.setItem(cacheKey, JSON.stringify({ loc, zoom, traceResults }));
     } catch (e) {
@@ -370,7 +388,7 @@ async function animateDrawing(traceResults, theme, animationId) {
         el.style.strokeDasharray = length;
         el.style.strokeDashoffset = length;
         el.getBoundingClientRect(); // trigger reflow
-        el.style.transition = 'stroke-dashoffset 0.4s ease-out';
+        el.style.transition = 'stroke-dashoffset 0.15s linear'; // スピードアップ
         el.style.strokeDashoffset = '0';
         
         // アニメーション完了後にダッシュ設定を完全に解除（ズーム時の途切れを修正）
@@ -380,16 +398,16 @@ async function animateDrawing(traceResults, theme, animationId) {
             el.style.strokeDashoffset = '';
             el.style.transition = '';
           }
-        }, 500);
+        }, 200);
       }
       
       drawnLayers.push(poly);
 
       // Wait a bit before starting next stroke for writing effect
-      await new Promise(r => setTimeout(r, 100)); // drastically reduced from 600ms
+      await new Promise(r => setTimeout(r, 40)); // 大幅に短縮 (100 -> 40)
     }
     // Pause between letters
-    await new Promise(r => setTimeout(r, 150)); // drastically reduced from 400ms
+    await new Promise(r => setTimeout(r, 60)); // 大幅に短縮 (150 -> 60)
   }
 
   // 3. 描画完了後の座標マトリックスエフェクト (Large Screen Overlay)
