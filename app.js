@@ -344,6 +344,64 @@ async function animateDrawing(traceResults, theme, animationId) {
     // Pause between letters
     await new Promise(r => setTimeout(r, 150)); // drastically reduced from 400ms
   }
+
+  // 3. 描画完了後の座標マトリックスエフェクト
+  // 文字ごとに1つのラベルを表示（最初のストロークの開始座標付近）
+  for (const result of traceResults) {
+    if (animationId !== currentAnimationId) return;
+    if (result.paths.length === 0 || result.paths[0].length === 0) continue;
+    
+    // Find the first valid point
+    let startPoint = null;
+    for (const p of result.paths[0]) {
+      if (Array.isArray(p) && p.length >= 2 && !isNaN(p[0]) && !isNaN(p[1])) {
+        startPoint = p;
+        break;
+      }
+    }
+    if (!startPoint) continue;
+
+    const lat = Number(startPoint[0]).toFixed(4);
+    const lon = Number(startPoint[1]).toFixed(4);
+    const finalHtml = `${lat}<br>${lon}`;
+
+    const icon = L.divIcon({
+      className: 'matrix-coord-label',
+      html: `<div>...</div>`,
+      iconSize: null, // Let CSS handle size
+      iconAnchor: [-10, 20] // Offset from the path start
+    });
+
+    const marker = L.marker([startPoint[0], startPoint[1]], { icon, interactive: false }).addTo(map);
+    drawnLayers.push(marker);
+
+    // Matrix Shuffle Animation
+    const el = marker.getElement();
+    if (el) {
+      let ticks = 0;
+      const maxTicks = 15 + Math.random() * 10; // ~1 second of shuffling
+      const interval = setInterval(() => {
+        if (animationId !== currentAnimationId) {
+          clearInterval(interval);
+          return;
+        }
+        if (ticks >= maxTicks) {
+          el.innerHTML = `<div>${finalHtml}</div>`;
+          el.classList.add('resolved');
+          clearInterval(interval);
+        } else {
+          // Shuffle numbers rapidly
+          const rLat = (Number(startPoint[0]) + (Math.random() - 0.5) * 10).toFixed(4);
+          const rLon = (Number(startPoint[1]) + (Math.random() - 0.5) * 10).toFixed(4);
+          el.innerHTML = `<div>${rLat}<br>${rLon}</div>`;
+          ticks++;
+        }
+      }, 50);
+    }
+    
+    // Stagger the label appearance slightly
+    await new Promise(r => setTimeout(r, 100));
+  }
 }
 
 function clearTrace() {

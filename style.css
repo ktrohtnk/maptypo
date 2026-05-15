@@ -122,3 +122,24 @@ textarea { resize: vertical; min-height: 80px; }
     padding: 14px;
   }
 }
+
+/* Matrix Coordinate Labels */
+.matrix-coord-label div {
+  background-color: #FFFFFF;
+  color: #111111;
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  line-height: 1.2;
+  padding: 4px 6px;
+  border: 1px solid #111111;
+  border-radius: 2px;
+  box-shadow: 2px 2px 0px rgba(0,0,0,1);
+  white-space: nowrap;
+  font-weight: 700;
+  opacity: 0.9;
+  letter-spacing: 0.5px;
+  pointer-events: none;
+}
+.matrix-coord-label.resolved div {
+  color: #E24F33; /* Accent color when resolved */
+}
