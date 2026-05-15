@@ -12,7 +12,7 @@ const TEMPLATES = {
   'A': [[[0.1, 1.0], [0.26, 0.6], [0.5, 0.0], [0.74, 0.6], [0.9, 1.0]], [[0.26, 0.6], [0.74, 0.6]]],
   'B': [[[0.2,0.0], [0.2,1.0]], [[0.2,0.0], [0.7,0.0], [0.9,0.25], [0.9,0.4], [0.7,0.5], [0.2,0.5]], [[0.2,0.5], [0.8,0.5], [1.0,0.75], [1.0,0.9], [0.8,1.0], [0.2,1.0]]],
   'C': [[[0.9,0.2], [0.5,0.0], [0.1,0.2], [0.1,0.8], [0.5,1.0], [0.9,0.8]]],
-  'D': [[[0.2,0.0], [0.2,1.0]], [[0.2,0.0], [0.7,0.0], [1.0,0.3], [1.0,0.7], [0.7,1.0], [0.2,1.0]]],
+  'D': [[[0.2,0.0], [0.2,1.0]], [[0.2,0.0], [0.6,0.0], [0.9,0.3], [0.9,0.7], [0.6,1.0], [0.2,1.0]]],
   'E': [[[0.9, 0.0], [0.2, 0.0], [0.2, 0.5], [0.2, 1.0], [0.9, 1.0]], [[0.2, 0.5], [0.8, 0.5]]],
   'F': [[[0.9, 0.0], [0.2, 0.0], [0.2, 0.5], [0.2, 1.0]], [[0.2, 0.5], [0.8, 0.5]]],
   'G': [[[0.9,0.2], [0.5,0.0], [0.1,0.2], [0.1,0.8], [0.5,1.0], [0.9,0.8], [0.9,0.5], [0.5,0.5]]],
@@ -242,8 +242,8 @@ function walkStroke(startLat, startLon, endLat, endLon, graph, nodes) {
       break;
     }
     
-    // Don't wander too far beyond the stroke length
-    if (current.g > targetDist * 1.8) continue; 
+    // Don't wander too far beyond the stroke length (increased to 2.5x to handle dense urban grids)
+    if (current.g > targetDist * 2.5) continue; 
     
     closedSet.add(current.node.id);
     const neighbors = graph.get(current.node.id) || [];
@@ -256,7 +256,7 @@ function walkStroke(startLat, startLon, endLat, endLon, graph, nodes) {
       
       // SHAPE CONSTRAINT: Penalty for drifting away from the ideal straight line
       const deviation = pointToLineDist(n.lat, n.lon, startLat, startLon, endLat, endLon);
-      const shapePenalty = deviation * 8; // Reduced from 15x to 8x to be more forgiving in large areas
+      const shapePenalty = deviation * 3; // Reduced from 8x to 3x to be much more forgiving for complex curves like D and O
       
       const f = g + h + shapePenalty;
       
