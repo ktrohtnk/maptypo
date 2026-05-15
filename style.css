@@ -145,9 +145,9 @@ textarea { resize: vertical; min-height: 80px; }
   font-family: 'Space Mono', monospace;
   font-size: 24px;
   line-height: 1;
-  padding: 6px 10px;
-  border: 2px solid #111111;
-  box-shadow: 4px 4px 0px rgba(0,0,0,1);
+  padding: 0px 4px;
+  border: none;
+  box-shadow: none;
   white-space: nowrap;
   font-weight: 700;
   letter-spacing: 2px;
@@ -164,8 +164,8 @@ textarea { resize: vertical; min-height: 80px; }
 [data-theme="monochrome"] .matrix-line {
   background-color: #111111;
   color: #FFFFFF;
-  border-color: #FFFFFF;
-  box-shadow: 4px 4px 0px rgba(255,255,255,1);
+  border: none;
+  box-shadow: none;
 }
 [data-theme="cyberpunk"] .matrix-line.resolved {
   color: #01ffc3;
