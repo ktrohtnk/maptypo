@@ -164,7 +164,7 @@ async function startTrace() {
   if (!address || !text) return alert('場所と文字を入力してください');
 
   // キャッシュキーの作成（住所・文字・サイズ・スタイル・地域が同じならキャッシュを使う）
-  const cacheKey = `maptypo_cache_${btoa(unescape(encodeURIComponent(address + text + letterSize + drawStyle + regionCode)))}`;
+  const cacheKey = `maptypo_cache_v2_${btoa(unescape(encodeURIComponent(address + text + letterSize + drawStyle + regionCode)))}`;
   const cached = localStorage.getItem(cacheKey);
 
   if (cached) {
