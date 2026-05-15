@@ -139,37 +139,43 @@ textarea { resize: vertical; min-height: 80px; }
   display: none;
 }
 
+/* Daft Punk LED Display Style */
 .matrix-line {
-  background-color: #FFFFFF;
-  color: #111111;
-  font-family: 'Space Mono', monospace;
-  font-size: 24px;
-  line-height: 1;
-  padding: 0px 4px;
-  border: none;
-  box-shadow: none;
+  background-color: #050505;
+  color: #ff2a00;
+  font-family: 'VT323', monospace;
+  font-size: 38px;
+  line-height: 1.1;
+  padding: 6px 16px;
+  border: 2px solid rgba(255, 42, 0, 0.3);
+  border-radius: 4px;
+  box-shadow: 0 0 15px rgba(255, 42, 0, 0.4), inset 0 0 10px rgba(255, 42, 0, 0.2);
   white-space: nowrap;
-  font-weight: 700;
-  letter-spacing: 2px;
+  font-weight: 400;
+  letter-spacing: 4px;
   text-transform: uppercase;
-  transition: color 0.3s;
+  text-shadow: 0 0 5px rgba(255, 42, 0, 0.8), 0 0 10px rgba(255, 42, 0, 0.6);
+  transition: all 0.2s;
+  /* Scanline effect */
+  background-image: linear-gradient(rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.5) 50%);
+  background-size: 100% 4px;
 }
 
 .matrix-line.resolved {
-  color: #E24F33;
+  color: #01ffc3;
+  border-color: rgba(1, 255, 195, 0.4);
+  box-shadow: 0 0 15px rgba(1, 255, 195, 0.5), inset 0 0 10px rgba(1, 255, 195, 0.2);
+  text-shadow: 0 0 5px rgba(1, 255, 195, 0.8), 0 0 10px rgba(1, 255, 195, 0.6);
 }
 
-/* For dark themes */
-[data-theme="cyberpunk"] .matrix-line,
+/* For themes, just keep the neon Daft Punk look universally to fit the vibe */
 [data-theme="monochrome"] .matrix-line {
   background-color: #111111;
-  color: #FFFFFF;
-  border: none;
-  box-shadow: none;
-}
-[data-theme="cyberpunk"] .matrix-line.resolved {
-  color: #01ffc3;
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
 }
 [data-theme="monochrome"] .matrix-line.resolved {
-  color: #FFFFFF;
+  color: #aaaaaa;
 }
