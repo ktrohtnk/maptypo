@@ -172,9 +172,15 @@ async function startTrace() {
       const { loc, zoom, traceResults } = JSON.parse(cached);
       initMap(loc.lat, loc.lon, zoom, theme);
       setStatus('Trace loaded from cache...', 90);
-      await animateDrawing(traceResults, theme);
-      setStatus('Trace complete.', 100);
-      setTimeout(() => document.getElementById('status-bar').classList.add('hidden'), 3000);
+      
+      currentAnimationId++;
+      const myAnimationId = currentAnimationId;
+      await animateDrawing(traceResults, theme, myAnimationId);
+      
+      if (currentAnimationId === myAnimationId) {
+        setStatus('Trace complete.', 100);
+        setTimeout(() => document.getElementById('status-bar').classList.add('hidden'), 3000);
+      }
       return;
     } catch (e) {
       console.warn('Cache parsing failed, fetching fresh data...', e);
