@@ -221,7 +221,7 @@ function walkStroke(startLat, startLon, endLat, endLon, graph, nodes) {
   let bestPath = [startNode];
   let closestDistToTarget = Infinity;
   let iterations = 0;
-  const MAX_ITERATIONS = 2500; // Increased to allow long connecting paths between letters
+  const MAX_ITERATIONS = 4000; // Increased further to allow finding paths across sparse/difficult terrain
 
   while (openSet.length > 0 && iterations++ < MAX_ITERATIONS) {
     // Sort to get lowest f (A* mechanic)
@@ -254,9 +254,9 @@ function walkStroke(startLat, startLon, endLat, endLon, graph, nodes) {
       const g = current.g + distance(current.node.lat, current.node.lon, n.lat, n.lon);
       const h = distance(n.lat, n.lon, endLat, endLon);
       
-      // SHAPE CONSTRAINT: Heavy penalty for drifting away from the ideal straight line of the stroke
+      // SHAPE CONSTRAINT: Penalty for drifting away from the ideal straight line
       const deviation = pointToLineDist(n.lat, n.lon, startLat, startLon, endLat, endLon);
-      const shapePenalty = deviation * 15; // 15x multiplier to force strict adherence to the letter shape
+      const shapePenalty = deviation * 8; // Reduced from 15x to 8x to be more forgiving in large areas
       
       const f = g + h + shapePenalty;
       
@@ -294,6 +294,20 @@ function walkStroke(startLat, startLon, endLat, endLon, graph, nodes) {
 function traceText(text, mapCenter, letterSizeMeters, allWays, connectLetters = false) {
   const { graph, nodes } = buildGraph(allWays);
   const resultPaths = [];
+
+  // --- NEW: Smart Map Center (Avoid Water/Empty areas) ---
+  // If the geocoded center is on a river/sea, we pull it towards the center of mass of the actual road network.
+  let sumLat = 0, sumLon = 0, nodeCount = 0;
+  nodes.forEach(n => { sumLat += n.lat; sumLon += n.lon; nodeCount++; });
+  if (nodeCount > 0) {
+    const roadCenterLat = sumLat / nodeCount;
+    const roadCenterLon = sumLon / nodeCount;
+    // Move the mapCenter halfway towards the road network's center of mass
+    mapCenter = [
+      (mapCenter[0] + roadCenterLat) / 2, 
+      (mapCenter[1] + roadCenterLon) / 2
+    ];
+  }
 
   const lines = text.toUpperCase().split('\n');
   
@@ -343,14 +357,32 @@ function traceText(text, mapCenter, letterSizeMeters, allWays, connectLetters = 
       
       const template = TEMPLATES[char] || TEMPLATES['O']; // Fallback
       
-      // ユーザーの要望に基づく「上下のマス目ずらし」
-      const verticalStagger = (Math.random() - 0.5) * letterH * 0.5; // 上下に最大25%ずらす
+      // --- NEW: Magnetic Smart Stagger ---
+      // ユーザーの要望に基づく「描ける場所を賢く選んでずらす」処理
+      // 文字の中心に最も近い実際の道路ノードを探し、そこに最大40%まで文字全体を引き寄せる（スナップする）
+      const idealCenterLat = baseLat + (letterH / 2);
+      const idealCenterLon = currentLon + (letterW / 2);
+      const nearestNode = findClosestNode(idealCenterLat, idealCenterLon, nodes);
+      
+      let shiftLat = 0;
+      let shiftLon = 0;
+      if (nearestNode) {
+        const maxShiftLat = letterH * 0.40; // 最大40%までずらすことを許可
+        const maxShiftLon = letterW * 0.40;
+        
+        shiftLat = nearestNode.lat - idealCenterLat;
+        shiftLon = nearestNode.lon - idealCenterLon;
+        
+        // Clamp (制限)
+        shiftLat = Math.max(-maxShiftLat, Math.min(maxShiftLat, shiftLat));
+        shiftLon = Math.max(-maxShiftLon, Math.min(maxShiftLon, shiftLon));
+      }
       
       const charBBox = {
-        minLat: baseLat + verticalStagger,
-        maxLat: baseLat + letterH + verticalStagger,
-        minLon: currentLon,
-        maxLon: currentLon + letterW
+        minLat: baseLat + shiftLat,
+        maxLat: baseLat + letterH + shiftLat,
+        minLon: currentLon + shiftLon,
+        maxLon: currentLon + letterW + shiftLon
       };
 
       const strokePaths = [];
