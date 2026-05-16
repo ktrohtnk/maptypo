@@ -142,10 +142,8 @@ function initMap(lat, lon, zoom, theme) {
   const solidThemes = ['solid-blue', 'solid-pink', 'minimal-blue', 'minimal-pink'];
   if (!solidThemes.includes(theme)) {
     let mapStyle;
-    if (theme === 'cyberpunk') {
-      mapStyle = 'dark_all';
-    } else if (theme === 'map-blue') {
-      mapStyle = 'dark_matter'; // ダークネイビー系の高品質タイル
+    if (theme === 'cyberpunk' || theme === 'map-blue') {
+      mapStyle = 'dark_all'; // ダークテーマ（実証済み）
     } else {
       mapStyle = 'light_all';
     }
