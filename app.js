@@ -138,8 +138,9 @@ function initMap(lat, lon, zoom, theme) {
   // data-theme属性をbodyに当ててCSSレベルでテーマを制御
   document.body.setAttribute('data-theme', theme);
 
-  // テーマに合わせてタイルを追加（カラーテーマはCSS側で非表示にする）
-  if (theme !== 'minimal-blue' && theme !== 'minimal-pink') {
+  // テーマに合わせてタイルを追加（ソリッドカラーテーマはCSS側で非表示にする）
+  const solidThemes = ['solid-blue', 'solid-pink', 'minimal-blue', 'minimal-pink'];
+  if (!solidThemes.includes(theme)) {
     const mapStyle = (theme === 'cyberpunk') ? 'dark_all' : 'light_all';
     L.tileLayer(`https://{s}.basemaps.cartocdn.com/${mapStyle}/{z}/{x}/{y}{r}.png`, {
       attribution: '© OpenStreetMap & CARTO', maxZoom: 19
@@ -289,15 +290,23 @@ async function startTrace() {
 }
 
 async function animateDrawing(traceResults, theme, animationId) {
-  let colors = ['#1D1D1F', '#E24F33', '#386641']; // Minimal black
-  if (theme === 'minimal-blue') {
-    colors = ['#FFFFFF', '#E0E0E0']; // White lines on blue
-  } else if (theme === 'minimal-pink') {
-    colors = ['#1D1D1F', '#333333']; // Black lines on pink
+  let colors;
+  if (theme === 'line-blue') {
+    colors = ['#1E90FF', '#005FCC']; // ブルーのライン（通常地図背景）
+  } else if (theme === 'line-pink') {
+    colors = ['#FF3EB5', '#CC0066']; // ピンクのライン（通常地図背景）
+  } else if (theme === 'solid-blue' || theme === 'minimal-blue') {
+    colors = ['#FFFFFF', '#E0E0E0']; // 青背景に白ライン
+  } else if (theme === 'solid-pink' || theme === 'minimal-pink') {
+    colors = ['#1D1D1F', '#333333']; // ピンク背景に黒ライン
+  } else if (theme === 'map-blue') {
+    colors = ['#FFFFFF', '#E8E8E8']; // 青地図に白ライン
   } else if (theme === 'cyberpunk') {
     colors = ['#ff2a6d', '#05d9e8', '#01ffc3'];
   } else if (theme === 'monochrome') {
     colors = ['#1D1D1F'];
+  } else {
+    colors = ['#1D1D1F', '#E24F33', '#386641']; // Minimal black
   }
 
   const shadowColor = theme === 'cyberpunk' ? '#ffffff' : '#000000';

@@ -69,19 +69,30 @@ textarea { resize: vertical; min-height: 80px; }
 #map-area { position: relative; background: #e5e5e5; }
 #map { height: 100%; width: 100%; background: transparent; }
 
-/* ── カラーテーマ: Blue ── */
+/* ── ソリッドBG: Blue ── */
 body[data-theme="minimal-blue"] #map,
-body[data-theme="minimal-blue"] .leaflet-container {
+body[data-theme="minimal-blue"] .leaflet-container,
+body[data-theme="solid-blue"] #map,
+body[data-theme="solid-blue"] .leaflet-container {
   background-color: #0000FF !important;
 }
-body[data-theme="minimal-blue"] .leaflet-tile-pane { display: none !important; }
+body[data-theme="minimal-blue"] .leaflet-tile-pane,
+body[data-theme="solid-blue"] .leaflet-tile-pane { display: none !important; }
 
-/* ── カラーテーマ: Pink ── */
+/* ── ソリッドBG: Pink ── */
 body[data-theme="minimal-pink"] #map,
-body[data-theme="minimal-pink"] .leaflet-container {
+body[data-theme="minimal-pink"] .leaflet-container,
+body[data-theme="solid-pink"] #map,
+body[data-theme="solid-pink"] .leaflet-container {
   background-color: #FF3EB5 !important;
 }
-body[data-theme="minimal-pink"] .leaflet-tile-pane { display: none !important; }
+body[data-theme="minimal-pink"] .leaflet-tile-pane,
+body[data-theme="solid-pink"] .leaflet-tile-pane { display: none !important; }
+
+/* ── Map Blue: タイルにCSSフィルターをかけて青い地図に ── */
+body[data-theme="map-blue"] .leaflet-tile-pane {
+  filter: hue-rotate(195deg) saturate(4) brightness(0.55) !important;
+}
 
 /* Reset default leaflet filters */
 .leaflet-layer, .leaflet-control-zoom-in, .leaflet-control-zoom-out, .leaflet-control-attribution { filter: none !important; }
