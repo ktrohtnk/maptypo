@@ -69,6 +69,20 @@ textarea { resize: vertical; min-height: 80px; }
 #map-area { position: relative; background: #e5e5e5; }
 #map { height: 100%; width: 100%; background: transparent; }
 
+/* ── カラーテーマ: Blue ── */
+body[data-theme="minimal-blue"] #map,
+body[data-theme="minimal-blue"] .leaflet-container {
+  background-color: #0000FF !important;
+}
+body[data-theme="minimal-blue"] .leaflet-tile-pane { display: none !important; }
+
+/* ── カラーテーマ: Pink ── */
+body[data-theme="minimal-pink"] #map,
+body[data-theme="minimal-pink"] .leaflet-container {
+  background-color: #FF3EB5 !important;
+}
+body[data-theme="minimal-pink"] .leaflet-tile-pane { display: none !important; }
+
 /* Reset default leaflet filters */
 .leaflet-layer, .leaflet-control-zoom-in, .leaflet-control-zoom-out, .leaflet-control-attribution { filter: none !important; }
 

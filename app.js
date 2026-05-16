@@ -135,16 +135,11 @@ function initMap(lat, lon, zoom, theme) {
     }
   });
 
-  // テーマに合わせて地図の背景色（タイル）を変更
-  const mapEl = document.getElementById('map');
-  if (theme === 'minimal-blue') {
-    mapEl.style.backgroundColor = '#0000FF';
-    // タイルなし — 純粋なソリッドカラー背景
-  } else if (theme === 'minimal-pink') {
-    mapEl.style.backgroundColor = '#FF69B4';
-    // タイルなし — 純粋なソリッドカラー背景
-  } else {
-    mapEl.style.backgroundColor = '';
+  // data-theme属性をbodyに当ててCSSレベルでテーマを制御
+  document.body.setAttribute('data-theme', theme);
+
+  // テーマに合わせてタイルを追加（カラーテーマはCSS側で非表示にする）
+  if (theme !== 'minimal-blue' && theme !== 'minimal-pink') {
     const mapStyle = (theme === 'cyberpunk') ? 'dark_all' : 'light_all';
     L.tileLayer(`https://{s}.basemaps.cartocdn.com/${mapStyle}/{z}/{x}/{y}{r}.png`, {
       attribution: '© OpenStreetMap & CARTO', maxZoom: 19
