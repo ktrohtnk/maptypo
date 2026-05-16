@@ -136,10 +136,25 @@ function initMap(lat, lon, zoom, theme) {
   });
 
   // テーマに合わせて地図の背景色（タイル）を変更
-  const mapStyle = theme === 'cyberpunk' ? 'dark_all' : 'light_all';
+  const mapStyle = (theme === 'cyberpunk') ? 'dark_all' : 'light_all';
   L.tileLayer(`https://{s}.basemaps.cartocdn.com/${mapStyle}/{z}/{x}/{y}{r}.png`, {
     attribution: '© OpenStreetMap & CARTO', maxZoom: 19
   }).addTo(map);
+
+  // カラーテーマ用の背景オーバーレイ
+  const mapEl = document.getElementById('map');
+  if (theme === 'minimal-blue') {
+    mapEl.style.background = '#0000FF';
+    mapEl.style.filter = 'opacity(1)';
+    // タイルを消して純色背景に
+    map.eachLayer(l => { if (l instanceof L.TileLayer) l.setOpacity(0); });
+  } else if (theme === 'minimal-pink') {
+    mapEl.style.background = '#FF69B4';
+    map.eachLayer(l => { if (l instanceof L.TileLayer) l.setOpacity(0); });
+  } else {
+    mapEl.style.background = '';
+    map.eachLayer(l => { if (l instanceof L.TileLayer) l.setOpacity(1); });
+  }
 }
 
 function clearMap() {
@@ -284,13 +299,17 @@ async function startTrace() {
 }
 
 async function animateDrawing(traceResults, theme, animationId) {
-  let colors = ['#E24F33', '#1D1D1F', '#386641']; // Minimalist functional colors
-  if (theme === 'cyberpunk') {
-    colors = ['#ff2a6d', '#05d9e8', '#01ffc3']; // Cyberpunk neon colors
+  let colors = ['#1D1D1F', '#E24F33', '#386641']; // Minimal black
+  if (theme === 'minimal-blue') {
+    colors = ['#FFFFFF', '#E0E0E0']; // White lines on blue
+  } else if (theme === 'minimal-pink') {
+    colors = ['#1D1D1F', '#333333']; // Black lines on pink
+  } else if (theme === 'cyberpunk') {
+    colors = ['#ff2a6d', '#05d9e8', '#01ffc3'];
   } else if (theme === 'monochrome') {
-    colors = ['#1D1D1F']; // Pure monochrome
+    colors = ['#1D1D1F'];
   }
-  
+
   const shadowColor = theme === 'cyberpunk' ? '#ffffff' : '#000000';
   const shadowOpacity = theme === 'cyberpunk' ? 0.1 : 0.2;
   let colorIdx = 0;
