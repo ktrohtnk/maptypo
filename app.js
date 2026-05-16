@@ -142,10 +142,10 @@ function initMap(lat, lon, zoom, theme) {
   const solidThemes = ['solid-blue', 'solid-pink', 'minimal-blue', 'minimal-pink'];
   if (!solidThemes.includes(theme)) {
     let mapStyle;
-    if (theme === 'cyberpunk' || theme === 'map-blue') {
-      mapStyle = 'dark_all'; // ダークテーマ（実証済み）
+    if (theme === 'cyberpunk') {
+      mapStyle = 'dark_all';
     } else {
-      mapStyle = 'light_all';
+      mapStyle = 'light_all'; // map-blueおよびその他はライトタイルからブルーフィルターで青に
     }
     L.tileLayer(`https://{s}.basemaps.cartocdn.com/${mapStyle}/{z}/{x}/{y}{r}.png`, {
       attribution: '© OpenStreetMap & CARTO', maxZoom: 19

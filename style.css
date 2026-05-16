@@ -88,9 +88,12 @@ body[data-theme="solid-pink"] .leaflet-container {
 }
 body[data-theme="minimal-pink"] .leaflet-tile-pane,
 body[data-theme="solid-pink"] .leaflet-tile-pane { display: none !important; }
-/* ── Map Blue: ダーク地図 + ピンクライン ── */
+/* ── Map Blue: タイルのみブルーにフィルター（ラインは無影響） ── */
+body[data-theme="map-blue"] .leaflet-tile-pane .leaflet-layer {
+  filter: sepia(1) hue-rotate(190deg) saturate(4) brightness(0.75) !important;
+}
 body[data-theme="map-blue"] .leaflet-container {
-  background-color: #1a1a2e !important; /* タイル読込中の灰色を防ぐ */
+  background-color: #1a4fff !important;
 }
 
 /* Reset default leaflet filters */
