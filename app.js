@@ -136,24 +136,19 @@ function initMap(lat, lon, zoom, theme) {
   });
 
   // テーマに合わせて地図の背景色（タイル）を変更
-  const mapStyle = (theme === 'cyberpunk') ? 'dark_all' : 'light_all';
-  L.tileLayer(`https://{s}.basemaps.cartocdn.com/${mapStyle}/{z}/{x}/{y}{r}.png`, {
-    attribution: '© OpenStreetMap & CARTO', maxZoom: 19
-  }).addTo(map);
-
-  // カラーテーマ用の背景オーバーレイ
   const mapEl = document.getElementById('map');
   if (theme === 'minimal-blue') {
-    mapEl.style.background = '#0000FF';
-    mapEl.style.filter = 'opacity(1)';
-    // タイルを消して純色背景に
-    map.eachLayer(l => { if (l instanceof L.TileLayer) l.setOpacity(0); });
+    mapEl.style.backgroundColor = '#0000FF';
+    // タイルなし — 純粋なソリッドカラー背景
   } else if (theme === 'minimal-pink') {
-    mapEl.style.background = '#FF69B4';
-    map.eachLayer(l => { if (l instanceof L.TileLayer) l.setOpacity(0); });
+    mapEl.style.backgroundColor = '#FF69B4';
+    // タイルなし — 純粋なソリッドカラー背景
   } else {
-    mapEl.style.background = '';
-    map.eachLayer(l => { if (l instanceof L.TileLayer) l.setOpacity(1); });
+    mapEl.style.backgroundColor = '';
+    const mapStyle = (theme === 'cyberpunk') ? 'dark_all' : 'light_all';
+    L.tileLayer(`https://{s}.basemaps.cartocdn.com/${mapStyle}/{z}/{x}/{y}{r}.png`, {
+      attribution: '© OpenStreetMap & CARTO', maxZoom: 19
+    }).addTo(map);
   }
 }
 
