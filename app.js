@@ -151,10 +151,12 @@ async function startTrace() {
   const address = document.getElementById('address-input').value.trim();
   // カタカナ・英数字・改行・スペースを許可
   const rawText = document.getElementById('target-chars-input').value;
-  const text = rawText.toUpperCase()
+  const text = rawText
     .replace(/！/g, '!')
     .replace(/？/g, '?')
-    .replace(/[^A-Z0-9\u30A0-\u30F6\u30FC\u30F3!? \n]/g, '');
+    .replace(/♥/g, '♡')
+    .toUpperCase()
+    .replace(/[^A-Z0-9\u30A0-\u30F6\u30FC\u30F3!?♡ \n]/g, '');
   const letterSize = parseInt(document.getElementById('size-select').value);
   const theme = document.getElementById('theme-select').value;
   const drawStyle = document.getElementById('style-select').value;
