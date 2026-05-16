@@ -186,6 +186,10 @@ async function startTrace() {
       initMap(loc.lat, loc.lon, zoom, theme);
       setStatus('Trace loaded from cache...', 90);
       
+      // ダウンロード用に保存
+      lastTraceResults = traceResults;
+      lastTheme = theme;
+      
       currentAnimationId++;
       const myAnimationId = currentAnimationId;
       await animateDrawing(traceResults, theme, myAnimationId);
@@ -490,10 +494,24 @@ function downloadSVG() {
   const toY = lat => (maxLat - lat) * scale + padding; // lat is inverted
 
   // テーマに合わせた色
-  let colors = ['#E24F33', '#1D1D1F', '#386641'];
-  if (lastTheme === 'cyberpunk') colors = ['#ff2a6d', '#05d9e8', '#01ffc3'];
-  else if (lastTheme === 'monochrome') colors = ['#1D1D1F'];
-  const bgColor = lastTheme === 'cyberpunk' ? '#0d0d0d' : '#F5F5F0';
+  let colors, bgColor;
+  if (lastTheme === 'cyberpunk') {
+    colors = ['#ff2a6d', '#05d9e8', '#01ffc3']; bgColor = '#0d0d0d';
+  } else if (lastTheme === 'monochrome') {
+    colors = ['#1D1D1F']; bgColor = '#F5F5F0';
+  } else if (lastTheme === 'line-blue') {
+    colors = ['#1E90FF', '#005FCC']; bgColor = '#F5F5F0';
+  } else if (lastTheme === 'line-pink') {
+    colors = ['#FF3EB5', '#CC0066']; bgColor = '#F5F5F0';
+  } else if (lastTheme === 'solid-blue' || lastTheme === 'minimal-blue') {
+    colors = ['#FFFFFF', '#E0E0E0']; bgColor = '#0000FF';
+  } else if (lastTheme === 'solid-pink' || lastTheme === 'minimal-pink') {
+    colors = ['#1D1D1F', '#333333']; bgColor = '#FF3EB5';
+  } else if (lastTheme === 'map-blue') {
+    colors = ['#FF3EB5', '#FF69D4']; bgColor = '#1a4fff';
+  } else {
+    colors = ['#1D1D1F', '#E24F33', '#386641']; bgColor = '#F5F5F0';
+  }
 
   let pathsSvg = '';
   let colorIdx = 0;
