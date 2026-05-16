@@ -89,10 +89,7 @@ body[data-theme="solid-pink"] .leaflet-container {
 body[data-theme="minimal-pink"] .leaflet-tile-pane,
 body[data-theme="solid-pink"] .leaflet-tile-pane { display: none !important; }
 
-/* ── Map Blue: タイルにCSSフィルターをかけて青い地図に ── */
-body[data-theme="map-blue"] .leaflet-tile-pane {
-  filter: hue-rotate(195deg) saturate(4) brightness(0.55) !important;
-}
+
 
 /* Reset default leaflet filters */
 .leaflet-layer, .leaflet-control-zoom-in, .leaflet-control-zoom-out, .leaflet-control-attribution { filter: none !important; }
