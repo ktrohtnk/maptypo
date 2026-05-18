@@ -144,8 +144,10 @@ function initMap(lat, lon, zoom, theme) {
     let mapStyle;
     if (theme === 'cyberpunk') {
       mapStyle = 'dark_all';
+    } else if (theme === 'map-blue') {
+      mapStyle = 'dark_nolabels'; // 白い道路線×黒背景 → CSSで青みがけ
     } else {
-      mapStyle = 'light_all'; // map-blueおよびその他はライトタイルからブルーフィルターで青に
+      mapStyle = 'light_all';
     }
     L.tileLayer(`https://{s}.basemaps.cartocdn.com/${mapStyle}/{z}/{x}/{y}{r}.png`, {
       attribution: '© OpenStreetMap & CARTO', maxZoom: 19

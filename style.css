@@ -88,16 +88,17 @@ body[data-theme="solid-pink"] .leaflet-container {
 }
 body[data-theme="minimal-pink"] .leaflet-tile-pane,
 body[data-theme="solid-pink"] .leaflet-tile-pane { display: none !important; }
-/* ── Map Blue: タイルのみブルーにフィルター（ラインは無影響） ── */
-body[data-theme="map-blue"] .leaflet-tile-pane .leaflet-layer {
-  filter: sepia(1) hue-rotate(190deg) saturate(4) brightness(0.75) !important;
+/* ── Map Blue: Carto Dark Matter に青みフィルター ── */
+body[data-theme="map-blue"] .leaflet-tile-container {
+  filter: hue-rotate(195deg) saturate(6) brightness(0.9) !important;
 }
 body[data-theme="map-blue"] .leaflet-container {
-  background-color: #1a4fff !important;
+  background-color: #0a1640 !important; /* タイル読込中の隙間を濃紺で埋める */
 }
 
-/* Reset default leaflet filters */
-.leaflet-layer, .leaflet-control-zoom-in, .leaflet-control-zoom-out, .leaflet-control-attribution { filter: none !important; }
+/* Reset default leaflet filters (マップブルーは除外) */
+body:not([data-theme="map-blue"]) .leaflet-layer,
+.leaflet-control-zoom-in, .leaflet-control-zoom-out, .leaflet-control-attribution { filter: none !important; }
 
 /* Clean up Leaflet UI */
 .leaflet-control-zoom { border: 1px solid var(--border) !important; box-shadow: 0 2px 8px rgba(0,0,0,0.05) !important; border-radius: 6px !important; overflow: hidden; }
