@@ -88,9 +88,21 @@ body[data-theme="solid-pink"] .leaflet-container {
 }
 body[data-theme="minimal-pink"] .leaflet-tile-pane,
 body[data-theme="solid-pink"] .leaflet-tile-pane { display: none !important; }
-/* ── Map Blue: Carto Dark Matter に青みフィルター ── */
+/* ── Map Blue: Screen blend overlay で白い道路を活かしつつ背景を青に ── */
 body[data-theme="map-blue"] .leaflet-tile-pane {
-  filter: hue-rotate(195deg) saturate(8) brightness(0.85) !important;
+  filter: none !important; /* 前回のフィルターをリセット */
+}
+body[data-theme="map-blue"] #map-area::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: #1a3aff; /* 鮮やかな青 */
+  mix-blend-mode: screen;
+  pointer-events: none;
+  z-index: 500;
+}
+body[data-theme="map-blue"] #map-area {
+  isolation: isolate; /* ブレンドモードがmap内に閉じるように */
 }
 body[data-theme="map-blue"] .leaflet-container {
   background-color: #0a1640 !important;
