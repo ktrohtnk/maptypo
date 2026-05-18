@@ -89,11 +89,11 @@ body[data-theme="solid-pink"] .leaflet-container {
 body[data-theme="minimal-pink"] .leaflet-tile-pane,
 body[data-theme="solid-pink"] .leaflet-tile-pane { display: none !important; }
 /* ── Map Blue: Carto Dark Matter に青みフィルター ── */
-body[data-theme="map-blue"] .leaflet-tile-container {
-  filter: hue-rotate(195deg) saturate(6) brightness(0.9) !important;
+body[data-theme="map-blue"] .leaflet-tile-pane {
+  filter: hue-rotate(195deg) saturate(8) brightness(0.85) !important;
 }
 body[data-theme="map-blue"] .leaflet-container {
-  background-color: #0a1640 !important; /* タイル読込中の隙間を濃紺で埋める */
+  background-color: #0a1640 !important;
 }
 
 /* Reset default leaflet filters (マップブルーは除外) */
