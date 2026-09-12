@@ -364,6 +364,7 @@ async function animateDrawing(traceResults, theme, animationId) {
         strokeWeight: 10,
         strokeOpacity: shadowOpacity,
         geodesic: false,
+        zIndex: 1,
         map: map
       });
       drawnLayers.push(shadow);
@@ -375,6 +376,7 @@ async function animateDrawing(traceResults, theme, animationId) {
         strokeWeight: 6,
         strokeOpacity: 0.9,
         geodesic: false,
+        zIndex: 2,
         map: map
       });
       drawnLayers.push(poly);
