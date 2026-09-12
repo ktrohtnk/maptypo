@@ -423,7 +423,14 @@ function traceText(text, mapCenter, letterSizeMeters, allWays, connectLetters = 
           
           if (roadSegment.length > 0) {
             if (currentPath.length > 0) {
-              // Join with previous segment of the same stroke
+              // Join with previous segment by walking the road network, NOT drawing a straight line
+              const prevEnd = currentPath[currentPath.length - 1];
+              const nextStart = roadSegment[0];
+              const connector = walkStroke(prevEnd[0], prevEnd[1], nextStart[0], nextStart[1], graph, nodes);
+              
+              if (connector.length > 0) {
+                currentPath.push(...connector.slice(1));
+              }
               currentPath.push(...roadSegment.slice(1));
             } else {
               currentPath = roadSegment;
