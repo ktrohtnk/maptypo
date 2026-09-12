@@ -359,7 +359,7 @@ async function animateDrawing(traceResults, theme, animationId) {
 
       // Draw background shadow
       const shadow = new google.maps.Polyline({
-        path: validPath,
+        path: validPath.map(pt => new google.maps.LatLng(pt.lat, pt.lng)),
         strokeColor: shadowColor,
         strokeWeight: 10,
         strokeOpacity: shadowOpacity,
@@ -370,7 +370,7 @@ async function animateDrawing(traceResults, theme, animationId) {
 
       // Draw animated stroke
       const poly = new google.maps.Polyline({
-        path: [validPath[0]], // Start with the first point
+        path: [new google.maps.LatLng(validPath[0].lat, validPath[0].lng)], // Start with the first point
         strokeColor: color,
         strokeWeight: 6,
         strokeOpacity: 0.9,
@@ -394,7 +394,8 @@ async function animateDrawing(traceResults, theme, animationId) {
           const currentPath = poly.getPath();
           for (let k = 0; k < ptsPerFrame; k++) {
             if (ptIdx < totalPts) {
-              currentPath.push(validPath[ptIdx]);
+              const pt = validPath[ptIdx];
+              currentPath.push(new google.maps.LatLng(pt.lat, pt.lng));
               ptIdx++;
             }
           }
