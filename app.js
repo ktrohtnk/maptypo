@@ -121,42 +121,30 @@ async function fetchRoads(lat, lon, radiusM) {
 }
 
 function initMap(lat, lon, zoom, theme) {
+  const mapId = '25667c8c3bcfb9ad2d5603ac';
+  
   if (!map) {
-    map = L.map('map', { zoomControl: false }).setView([lat, lon], zoom);
-    L.control.zoom({ position: 'bottomright' }).addTo(map);
+    map = new google.maps.Map(document.getElementById('map'), {
+      center: { lat: lat, lng: lon },
+      zoom: zoom,
+      mapId: mapId,
+      disableDefaultUI: true,
+      zoomControl: true,
+      zoomControlOptions: {
+        position: google.maps.ControlPosition.RIGHT_BOTTOM
+      }
+    });
   } else {
-    map.setView([lat, lon], zoom);
+    map.setCenter({ lat: lat, lng: lon });
+    map.setZoom(zoom);
   }
-
-  // 古い地図レイヤーを削除
-  map.eachLayer(layer => {
-    if (layer instanceof L.TileLayer) {
-      map.removeLayer(layer);
-    }
-  });
 
   // data-theme属性をbodyに当ててCSSレベルでテーマを制御
   document.body.setAttribute('data-theme', theme);
-
-  // テーマに合わせてタイルを追加（ソリッドカラーテーマはCSS側で非表示にする）
-  const solidThemes = ['solid-blue', 'solid-pink', 'minimal-blue', 'minimal-pink'];
-  if (!solidThemes.includes(theme)) {
-    let mapStyle;
-    if (theme === 'cyberpunk') {
-      mapStyle = 'dark_all';
-    } else if (theme === 'map-blue') {
-      mapStyle = 'dark_nolabels'; // 白い道路線×黒背景 → CSSで青みがけ
-    } else {
-      mapStyle = 'light_all';
-    }
-    L.tileLayer(`https://{s}.basemaps.cartocdn.com/${mapStyle}/{z}/{x}/{y}{r}.png`, {
-      attribution: '© OpenStreetMap & CARTO', maxZoom: 19
-    }).addTo(map);
-  }
 }
 
 function clearMap() {
-  drawnLayers.forEach(l => l.remove());
+  drawnLayers.forEach(l => l.setMap(null));
   drawnLayers = [];
 }
 
@@ -345,7 +333,9 @@ async function animateDrawing(traceResults, theme, animationId) {
 
   if (allLatLngs.length > 0) {
     // 描画範囲に合わせてカメラを滑らかに移動・ズーム
-    map.fitBounds(L.latLngBounds(allLatLngs), { padding: [80, 80], animate: true, duration: 1.5 });
+    const bounds = new google.maps.LatLngBounds();
+    allLatLngs.forEach(ll => bounds.extend({lat: ll[0], lng: ll[1]}));
+    map.fitBounds(bounds, 80); // padding 80
     // カメラの移動完了を待つ
     await new Promise(r => setTimeout(r, 1500));
   }
@@ -360,53 +350,66 @@ async function animateDrawing(traceResults, theme, animationId) {
     for (const path of result.paths) {
       if (animationId !== currentAnimationId) return; // Abort if cancelled
 
-      // Strongly sanitize the path to ensure Leaflet gets clean numbers
+      // Strongly sanitize the path to ensure we have clean numbers
       const validPath = path
         .filter(p => Array.isArray(p) && p.length >= 2 && p[0] != null && p[1] != null && !isNaN(p[0]) && !isNaN(p[1]))
-        .map(p => [Number(p[0]), Number(p[1])]);
+        .map(p => ({lat: Number(p[0]), lng: Number(p[1])}));
 
       if (validPath.length < 2) continue;
 
       // Draw background shadow
-      const shadow = L.polyline(validPath, { color: shadowColor, weight: 10, opacity: shadowOpacity, lineCap: 'round', lineJoin: 'round' }).addTo(map);
+      const shadow = new google.maps.Polyline({
+        path: validPath,
+        strokeColor: shadowColor,
+        strokeWeight: 10,
+        strokeOpacity: shadowOpacity,
+        geodesic: false,
+        map: map
+      });
       drawnLayers.push(shadow);
 
       // Draw animated stroke
-      const poly = L.polyline(validPath, { 
-        color: color, 
-        weight: 6, 
-        opacity: 0.9, 
-        lineCap: 'round', 
-        lineJoin: 'round'
-      }).addTo(map);
-      
-      // Dynamic animation using SVG dash offset
-      const el = poly.getElement();
-      if (el) {
-        const length = el.getTotalLength();
-        el.style.strokeDasharray = length;
-        el.style.strokeDashoffset = length;
-        el.getBoundingClientRect(); // trigger reflow
-        el.style.transition = 'stroke-dashoffset 0.15s linear'; // スピードアップ
-        el.style.strokeDashoffset = '0';
-        
-        // アニメーション完了後にダッシュ設定を完全に解除（ズーム時の途切れを修正）
-        setTimeout(() => {
-          if (el && el.style) {
-            el.style.strokeDasharray = '';
-            el.style.strokeDashoffset = '';
-            el.style.transition = '';
-          }
-        }, 200);
-      }
-      
+      const poly = new google.maps.Polyline({
+        path: [validPath[0]], // Start with the first point
+        strokeColor: color,
+        strokeWeight: 6,
+        strokeOpacity: 0.9,
+        geodesic: false,
+        map: map
+      });
       drawnLayers.push(poly);
 
+      // Animate the line drawing by adding points progressively
+      await new Promise(resolve => {
+        let ptIdx = 1;
+        const totalPts = validPath.length;
+        // Simulate a fast 150ms draw time (approx 10 frames at 60fps)
+        const ptsPerFrame = Math.max(1, Math.ceil(totalPts / 10));
+        
+        const drawInterval = setInterval(() => {
+          if (animationId !== currentAnimationId) {
+            clearInterval(drawInterval);
+            return resolve();
+          }
+          const currentPath = poly.getPath();
+          for (let k = 0; k < ptsPerFrame; k++) {
+            if (ptIdx < totalPts) {
+              currentPath.push(validPath[ptIdx]);
+              ptIdx++;
+            }
+          }
+          if (ptIdx >= totalPts) {
+            clearInterval(drawInterval);
+            resolve();
+          }
+        }, 15);
+      });
+
       // Wait a bit before starting next stroke for writing effect
-      await new Promise(r => setTimeout(r, 40)); // 大幅に短縮 (100 -> 40)
+      await new Promise(r => setTimeout(r, 40)); 
     }
     // Pause between letters
-    await new Promise(r => setTimeout(r, 60)); // 大幅に短縮 (150 -> 60)
+    await new Promise(r => setTimeout(r, 60)); 
   }
 
   // 3. 描画完了後の座標マトリックスエフェクト (Large Screen Overlay)
@@ -420,9 +423,11 @@ async function animateDrawing(traceResults, theme, animationId) {
     matrixLon.classList.remove('resolved');
     
     // Calculate center of the drawing
-    const centerBounds = L.latLngBounds(allLatLngs).getCenter();
-    const finalLat = centerBounds.lat.toFixed(4);
-    const finalLon = centerBounds.lng.toFixed(4);
+    const bounds = new google.maps.LatLngBounds();
+    allLatLngs.forEach(ll => bounds.extend({lat: ll[0], lng: ll[1]}));
+    const centerBounds = bounds.getCenter();
+    const finalLat = centerBounds.lat().toFixed(4);
+    const finalLon = centerBounds.lng().toFixed(4);
     
     let ticks = 0;
     const maxTicks = 20; // 1 second of shuffling
@@ -440,8 +445,8 @@ async function animateDrawing(traceResults, theme, animationId) {
         clearInterval(interval);
       } else {
         // Shuffle numbers rapidly
-        const rLat = (centerBounds.lat + (Math.random() - 0.5) * 10).toFixed(4);
-        const rLon = (centerBounds.lng + (Math.random() - 0.5) * 10).toFixed(4);
+        const rLat = (centerBounds.lat() + (Math.random() - 0.5) * 10).toFixed(4);
+        const rLon = (centerBounds.lng() + (Math.random() - 0.5) * 10).toFixed(4);
         matrixLat.textContent = `LAT: ${rLat}`;
         matrixLon.textContent = `LON: ${rLon}`;
         ticks++;

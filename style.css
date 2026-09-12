@@ -69,54 +69,35 @@ textarea { resize: vertical; min-height: 80px; }
 #map-area { position: relative; background: #e5e5e5; }
 #map { height: 100%; width: 100%; background: transparent; }
 
-/* ── ソリッドBG: Blue ── */
+/* Google Maps Solid Themes Support */
 body[data-theme="minimal-blue"] #map,
-body[data-theme="minimal-blue"] .leaflet-container,
-body[data-theme="solid-blue"] #map,
-body[data-theme="solid-blue"] .leaflet-container {
+body[data-theme="solid-blue"] #map {
   background-color: #0000FF !important;
 }
-body[data-theme="minimal-blue"] .leaflet-tile-pane,
-body[data-theme="solid-blue"] .leaflet-tile-pane { display: none !important; }
-
-/* ── ソリッドBG: Pink ── */
 body[data-theme="minimal-pink"] #map,
-body[data-theme="minimal-pink"] .leaflet-container,
-body[data-theme="solid-pink"] #map,
-body[data-theme="solid-pink"] .leaflet-container {
+body[data-theme="solid-pink"] #map {
   background-color: #FF3EB5 !important;
 }
-body[data-theme="minimal-pink"] .leaflet-tile-pane,
-body[data-theme="solid-pink"] .leaflet-tile-pane { display: none !important; }
-/* ── Map Blue: Screen blend overlay で白い道路を活かしつつ背景を青に ── */
-body[data-theme="map-blue"] .leaflet-tile-pane {
-  filter: none !important; /* 前回のフィルターをリセット */
-}
+
+/* Map Blue - blend overlay */
 body[data-theme="map-blue"] #map-area::after {
   content: '';
   position: absolute;
   inset: 0;
-  background-color: #1a3aff; /* 鮮やかな青 */
+  background-color: #1a3aff;
   mix-blend-mode: screen;
   pointer-events: none;
   z-index: 500;
 }
 body[data-theme="map-blue"] #map-area {
-  isolation: isolate; /* ブレンドモードがmap内に閉じるように */
+  isolation: isolate;
 }
-body[data-theme="map-blue"] .leaflet-container {
+body[data-theme="map-blue"] #map {
   background-color: #0a1640 !important;
 }
 
-/* Reset default leaflet filters (マップブルーは除外) */
-body:not([data-theme="map-blue"]) .leaflet-layer,
-.leaflet-control-zoom-in, .leaflet-control-zoom-out, .leaflet-control-attribution { filter: none !important; }
-
-/* Clean up Leaflet UI */
-.leaflet-control-zoom { border: 1px solid var(--border) !important; box-shadow: 0 2px 8px rgba(0,0,0,0.05) !important; border-radius: 6px !important; overflow: hidden; }
-.leaflet-control-zoom a { background: #ffffff !important; color: var(--text) !important; border-bottom: 1px solid var(--border) !important; }
-.leaflet-control-zoom a:last-child { border-bottom: none !important; }
-.leaflet-control-attribution { background: rgba(255,255,255,0.8) !important; color: var(--text2) !important; border: none !important; }
+/* Hide Google Maps UI elements that clutter the screen if needed */
+.gmnoprint { display: none !important; }
 
 /* SVG Animation for Tracing */
 .road-trace-path { stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawTrace 0.4s ease-out forwards; }
