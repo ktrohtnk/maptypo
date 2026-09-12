@@ -95,8 +95,8 @@ async function fetchRoads(lat, lon, radiusM) {
   // Overpass APIの安定性とデータ精度のバランスを取るため、最大半径を3500m（7km四方）に設定
   const safeRadius = Math.min(radiusM, 3500);
   
-  // 精度低下を防ぎつつ、公園内の歩道や小道などもキャンバスとして利用できるように拡張
-  const highwayTypes = "^(motorway|trunk|primary|secondary|tertiary|residential|unclassified|pedestrian|footway|path|service)$";
+  // 精度低下を防ぎつつ、公園内の歩道(footway)や小道(path)は含める。ただし、細かすぎる路地(service)は重くなるので除外。
+  const highwayTypes = "^(motorway|trunk|primary|secondary|tertiary|residential|unclassified|pedestrian|footway|path)$";
 
   const dLat = safeRadius / 111320, dLon = safeRadius / (111320 * Math.cos(lat * Math.PI / 180));
   const query = `[out:json][timeout:25];way["highway"~"${highwayTypes}"](${lat-dLat},${lon-dLon},${lat+dLat},${lon+dLon});out geom;`;
@@ -385,8 +385,8 @@ async function animateDrawing(traceResults, theme, animationId) {
       await new Promise(resolve => {
         let ptIdx = 1;
         const totalPts = validPath.length;
-        // Simulate a fast 150ms draw time (approx 10 frames at 60fps)
-        const ptsPerFrame = Math.max(1, Math.ceil(totalPts / 10));
+        // Simulate a faster draw time (approx 6 frames)
+        const ptsPerFrame = Math.max(1, Math.ceil(totalPts / 6));
         
         const drawInterval = setInterval(() => {
           if (animationId !== currentAnimationId) {
@@ -405,14 +405,14 @@ async function animateDrawing(traceResults, theme, animationId) {
             clearInterval(drawInterval);
             resolve();
           }
-        }, 15);
+        }, 12);
       });
 
       // Wait a bit before starting next stroke for writing effect
-      await new Promise(r => setTimeout(r, 40)); 
+      await new Promise(r => setTimeout(r, 20)); 
     }
     // Pause between letters
-    await new Promise(r => setTimeout(r, 60)); 
+    await new Promise(r => setTimeout(r, 30)); 
   }
 
   // 3. 描画完了後の座標マトリックスエフェクト (Large Screen Overlay)
