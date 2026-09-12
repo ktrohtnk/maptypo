@@ -248,7 +248,7 @@ async function startTrace() {
 
     if (!ways) {
       setStatus('Fetching road network...', 40);
-      const fetchRadius = Math.max(2000, requiredSize / 2 + 500); // 描画範囲より少し広めに取得
+      const fetchRadius = Math.max(800, requiredSize / 2 + 300); // 最小範囲を小さくして超高速化
       ways = await fetchRoads(loc.lat, loc.lon, fetchRadius);
     }
 
