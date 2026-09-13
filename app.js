@@ -121,27 +121,26 @@ async function fetchRoads(lat, lon, radiusM) {
 }
 
 const MAP_STYLE_LIGHT = [
-  // 1. 全体を完全モノクロ化（彩度ゼロ）
-  { featureType: "all", stylers: [{ saturation: -100 }] },
-  
-  // 2. あらゆるアイコン（号線標識、ピンなど）を「すべて完全に非表示」にする
+  // 1. あらゆるアイコン（号線標識、ピンなど）を「すべて完全に非表示」にする
   { featureType: "all", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
   
-  // 3. お店などのPOIテキストを非表示
+  // 2. お店などのPOIテキストを非表示
   { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
   
-  // 4. ベースカラー
-  { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#F2F2F2" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#E8E8E8" }] },
-  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#EAEAEA" }] },
+  // 3. ベースカラー（指定のブルーグレーとグリーン）
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#d5dadc" }] }, // 海、川、池
+  { featureType: "landscape.man_made", elementType: "geometry", stylers: [{ color: "#d5dadc" }] }, // 建物
+  { featureType: "poi", elementType: "geometry", stylers: [{ color: "#d5dadc" }] }, // その他の施設も建物色に統一
+  { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#e8eee9" }] }, // 山など
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#e8eee9" }] }, // 公園
   
-  // 5. 道を「純白」にしつつ、すべての道に「極薄グレーの縁取り」をつける
+  // 4. 道を「純白」にしつつ、すべての道に「極薄グレーの縁取り」をつける
   { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#FFFFFF" }] },
   { featureType: "road", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#D8D8D8" }, { weight: 1 }] },
   { featureType: "road.arterial", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#CCCCCC" }, { weight: 1 }] },
   { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#C0C0C0" }, { weight: 1.5 }] },
   
-  // 6. 文字（指定の美しいブルーグレー）
+  // 5. 文字（指定の美しいブルーグレー）
   { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#b4bcbf" }] },
   { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#FFFFFF" }, { weight: 3 }] },
   { featureType: "road.local", elementType: "labels", stylers: [{ visibility: "off" }] },
@@ -410,7 +409,7 @@ async function animateDrawing(traceResults, theme, animationId) {
       const shadow = new google.maps.Polyline({
         path: validPath.map(pt => new google.maps.LatLng(pt.lat, pt.lng)),
         strokeColor: shadowColor,
-        strokeWeight: 14,
+        strokeWeight: 12, // 14から少し細くして12に
         strokeOpacity: shadowOpacity,
         geodesic: false,
         zIndex: 1,
