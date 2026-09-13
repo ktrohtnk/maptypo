@@ -121,18 +121,17 @@ async function fetchRoads(lat, lon, radiusM) {
 }
 
 const MAP_STYLE_LIGHT = [
-  { featureType: "all", stylers: [{ saturation: -100 }] }, // 完全モノクロ
-  { featureType: "all", elementType: "labels.icon", stylers: [{ visibility: "off" }] }, // ピンを非表示
-  { featureType: "all", elementType: "geometry", stylers: [{ color: "#EDEDED" }] }, // 背景
+  { featureType: "all", stylers: [{ saturation: -100 }] },
+  { featureType: "all", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+  { featureType: "all", elementType: "geometry", stylers: [{ color: "#EAEAEA" }] }, // 背景
   
-  // 建物をクッキリさせる（塗りつぶしと枠線）
-  { featureType: "landscape.man_made", elementType: "geometry.fill", stylers: [{ color: "#E0E0E0" }] },
-  { featureType: "landscape.man_made", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#D4D4D4" }, { weight: 1 }] },
-  { featureType: "poi", elementType: "geometry.fill", stylers: [{ color: "#E0E0E0" }] }, // 商業施設などの建物
+  // 枠線が使えないため、塗りつぶしの色を「ガッツリ濃く」してブロック感を出す
+  { featureType: "landscape.man_made", elementType: "geometry.fill", stylers: [{ color: "#D0D0D0" }] },
+  { featureType: "poi", elementType: "geometry.fill", stylers: [{ color: "#D0D0D0" }] },
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#CDCDCD" }] },
   
-  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#DCDCDC" }] }, // 公園
   { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#777777" }] },
-  { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#EDEDED" }, { weight: 2.5 }] },
+  { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#EAEAEA" }, { weight: 2.5 }] },
   { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#FFFFFF" }] },
   { featureType: "road", elementType: "geometry.stroke", stylers: [{ visibility: "off" }] },
   { featureType: "road.arterial", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#D0D0D0" }, { weight: 1 }] },
@@ -146,12 +145,11 @@ const MAP_STYLE_DARK = [
   { featureType: "all", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
   { featureType: "all", elementType: "geometry", stylers: [{ color: "#222222" }] },
   
-  // 建物をクッキリさせる（ダークモード）
-  { featureType: "landscape.man_made", elementType: "geometry.fill", stylers: [{ color: "#2D2D2D" }] },
-  { featureType: "landscape.man_made", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#1A1A1A" }, { weight: 1 }] },
-  { featureType: "poi", elementType: "geometry.fill", stylers: [{ color: "#2D2D2D" }] },
+  // 建物をもっと明るいグレーにして浮かび上がらせる
+  { featureType: "landscape.man_made", elementType: "geometry.fill", stylers: [{ color: "#3A3A3A" }] },
+  { featureType: "poi", elementType: "geometry.fill", stylers: [{ color: "#3A3A3A" }] },
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#333333" }] },
   
-  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#262626" }] },
   { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#888888" }] },
   { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#222222" }, { weight: 2.5 }] },
   { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#111111" }] },
