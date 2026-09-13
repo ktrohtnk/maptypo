@@ -450,6 +450,34 @@ async function animateDrawing(traceResults, textColorHex, isRandomColor, animati
     await new Promise(r => setTimeout(r, 1500));
   }
 
+  // 3. 座標マトリックスエフェクト (文字描画と同時に表示・シャッフル開始)
+  const matrixOverlay = document.getElementById('matrix-overlay');
+  const matrixLat = document.getElementById('matrix-lat');
+  const matrixLon = document.getElementById('matrix-lon');
+  
+  let matrixInterval = null;
+  if (matrixOverlay && allLatLngs.length > 0) {
+    matrixOverlay.classList.remove('hidden');
+    matrixLat.classList.remove('resolved');
+    matrixLon.classList.remove('resolved');
+    
+    const bounds = new google.maps.LatLngBounds();
+    allLatLngs.forEach(ll => bounds.extend({lat: ll[0], lng: ll[1]}));
+    const centerBounds = bounds.getCenter();
+    
+    matrixInterval = setInterval(() => {
+      if (animationId !== currentAnimationId) {
+        clearInterval(matrixInterval);
+        matrixOverlay.classList.add('hidden');
+        return;
+      }
+      const rLat = (centerBounds.lat() + (Math.random() - 0.5) * 10).toFixed(4);
+      const rLon = (centerBounds.lng() + (Math.random() - 0.5) * 10).toFixed(4);
+      matrixLat.textContent = `LAT: ${rLat}`;
+      matrixLon.textContent = `LON: ${rLon}`;
+    }, 50);
+  }
+
   // 2. アニメーション描画ループ
   for (const result of traceResults) {
     if (animationId !== currentAnimationId) return; // Abort if cancelled
@@ -529,49 +557,19 @@ async function animateDrawing(traceResults, textColorHex, isRandomColor, animati
     await new Promise(r => setTimeout(r, 30)); 
   }
 
-  // 3. 描画完了後の座標マトリックスエフェクト (Large Screen Overlay)
-  const matrixOverlay = document.getElementById('matrix-overlay');
-  const matrixLat = document.getElementById('matrix-lat');
-  const matrixLon = document.getElementById('matrix-lon');
   
+  // 描画完了後に座標を確定
   if (matrixOverlay && allLatLngs.length > 0) {
-    matrixOverlay.classList.remove('hidden');
-    matrixLat.classList.remove('resolved');
-    matrixLon.classList.remove('resolved');
-    
-    // Calculate center of the drawing
+    clearInterval(matrixInterval);
     const bounds = new google.maps.LatLngBounds();
     allLatLngs.forEach(ll => bounds.extend({lat: ll[0], lng: ll[1]}));
     const centerBounds = bounds.getCenter();
-    const finalLat = centerBounds.lat().toFixed(4);
-    const finalLon = centerBounds.lng().toFixed(4);
-    
-    let ticks = 0;
-    const maxTicks = 20; // 1 second of shuffling
-    const interval = setInterval(() => {
-      if (animationId !== currentAnimationId) {
-        clearInterval(interval);
-        matrixOverlay.classList.add('hidden');
-        return;
-      }
-      if (ticks >= maxTicks) {
-        matrixLat.textContent = `LAT: ${finalLat}`;
-        matrixLon.textContent = `LON: ${finalLon}`;
-        matrixLat.classList.add('resolved');
-        matrixLon.classList.add('resolved');
-        clearInterval(interval);
-      } else {
-        // Shuffle numbers rapidly
-        const rLat = (centerBounds.lat() + (Math.random() - 0.5) * 10).toFixed(4);
-        const rLon = (centerBounds.lng() + (Math.random() - 0.5) * 10).toFixed(4);
-        matrixLat.textContent = `LAT: ${rLat}`;
-        matrixLon.textContent = `LON: ${rLon}`;
-        ticks++;
-      }
-    }, 50);
+    matrixLat.textContent = `LAT: ${centerBounds.lat().toFixed(4)}`;
+    matrixLon.textContent = `LON: ${centerBounds.lng().toFixed(4)}`;
+    matrixLat.classList.add('resolved');
+    matrixLon.classList.add('resolved');
   }
 }
-
 function clearTrace() {
   currentAnimationId++; // アニメーションを中断する
   clearMap();

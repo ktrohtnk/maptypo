@@ -187,26 +187,6 @@ body[data-theme="map-blue"] #map {
   right: 0;
 }
 
-/* 測定線（クロスヘア）のアノテーション的装飾 */
-#matrix-lat::after {
-  content: '';
-  position: absolute;
-  bottom: -20px;
-  left: 0;
-  width: 1px;
-  height: 20px;
-  background-color: #FF0000;
-}
-#matrix-lon::before {
-  content: '';
-  position: absolute;
-  top: -20px;
-  right: 0;
-  width: 1px;
-  height: 20px;
-  background-color: #FF0000;
-}
-
 .matrix-line.resolved {
   color: #FFFFFF;
   background-color: #FF0000;
@@ -217,12 +197,6 @@ body[data-theme="map-blue"] #map {
 [data-theme="monochrome"] .matrix-line {
   background-color: #111111;
   color: #FF0000;
-}
-[data-theme="cyberpunk"] #matrix-lat::after,
-[data-theme="cyberpunk"] #matrix-lon::before,
-[data-theme="monochrome"] #matrix-lat::after,
-[data-theme="monochrome"] #matrix-lon::before {
-  background-color: #555555;
 }
 [data-theme="cyberpunk"] .matrix-line.resolved {
   color: #01ffc3;
