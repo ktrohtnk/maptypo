@@ -207,8 +207,9 @@ async function startTrace() {
     .toUpperCase()
     .replace(/[^A-Z0-9\u30A0-\u30F6\u30FC\u30F3!?♡ \n]/g, '');
   const letterSize = parseInt(document.getElementById('size-select')?.value || '500');
-  const textColorHex = document.getElementById('color-picker')?.value || '#0000ff';
-  const isRandomColor = document.getElementById('random-color-checkbox')?.checked || false;
+  const textColorHex = document.getElementById('color-picker')?.value || '#1E90FF';
+  const checkbox = document.getElementById('random-color-checkbox');
+  const isRandomColor = checkbox ? checkbox.checked : true;
 
   if (!address || !text) return alert('場所と文字を入力してください');
 
