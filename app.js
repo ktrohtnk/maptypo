@@ -185,6 +185,7 @@ function initMap(lat, lon, zoom) {
       zoom: zoom,
       styles: currentStyle, // プログラムで強制的にスタイルを上書き！
       disableDefaultUI: true,
+      fullscreenControl: false,
       zoomControl: true,
       zoomControlOptions: {
         position: google.maps.ControlPosition.RIGHT_BOTTOM
