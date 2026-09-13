@@ -338,10 +338,6 @@ function traceText(text, mapCenter, letterSizeMeters, allWays, connectLetters = 
 
   let prevCharEnd = null;
   let prevCharBBox = null;
-  
-  let globalShiftLat = 0;
-  let globalShiftLon = 0;
-  let isFirstChar = true;
 
   for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
     const line = lines[lineIndex];
@@ -361,7 +357,16 @@ function traceText(text, mapCenter, letterSizeMeters, allWays, connectLetters = 
     // Start from the left so this line is centered horizontally
     let currentLon = mapCenter[1] - (totalW / 2);
     
-    const baseLat = currentLat - letterH; // Bottom edge of the current line
+    // --- SPECIAL REQUEST ---
+    // ユーザー要望: 1行目（ROAD）の座標計算を、複数行対応前の「単一行」だった頃（一昨日）と
+    // 全く同じになるように強制する。これによりRが完璧な位置の交差点からスタートする。
+    let baseLat;
+    if (lineIndex === 0) {
+      baseLat = mapCenter[0] - (letterH / 2); // 一昨日の単一行時の座標（ど真ん中）
+    } else {
+      // 2行目以降は、1行目の下にくっつける
+      baseLat = (mapCenter[0] - (letterH / 2)) - (lineIndex * (letterH + gapH));
+    }
 
     for (const char of chars) {
       if (char === ' ') { 
@@ -374,41 +379,11 @@ function traceText(text, mapCenter, letterSizeMeters, allWays, connectLetters = 
       
       const template = TEMPLATES[char] || TEMPLATES['O']; // Fallback
       
-      if (isFirstChar) {
-        // --- NEW: Global Magnetic Shift ---
-        // 最初の文字の中心に最も近い道路ノードを探し、そこに文字全体を引き寄せる。
-        // これにより最初のRの形状が綺麗にスナップし、かつ後続の文字のベースラインも揃う。
-        const idealCenterLat = baseLat + (letterH / 2);
-        const idealCenterLon = currentLon + (letterW / 2);
-        
-        let minDist = Infinity;
-        let nearestNode = null;
-        nodes.forEach(node => {
-          const dLat = node.lat - idealCenterLat;
-          const dLon = node.lon - idealCenterLon;
-          const distSq = dLat*dLat + dLon*dLon;
-          if (distSq < minDist) {
-            minDist = distSq;
-            nearestNode = node;
-          }
-        });
-        
-        if (nearestNode) {
-          const maxShiftLat = letterH * 0.50; // 最大50%までずらす
-          const maxShiftLon = letterW * 0.50;
-          let sLat = nearestNode.lat - idealCenterLat;
-          let sLon = nearestNode.lon - idealCenterLon;
-          globalShiftLat = Math.max(-maxShiftLat, Math.min(maxShiftLat, sLat));
-          globalShiftLon = Math.max(-maxShiftLon, Math.min(maxShiftLon, sLon));
-        }
-        isFirstChar = false;
-      }
-      
       const charBBox = {
-        minLat: baseLat + globalShiftLat,
-        maxLat: baseLat + letterH + globalShiftLat,
-        minLon: currentLon + globalShiftLon,
-        maxLon: currentLon + letterW + globalShiftLon
+        minLat: baseLat,
+        maxLat: baseLat + letterH,
+        minLon: currentLon,
+        maxLon: currentLon + letterW
       };
 
       const strokePaths = [];
