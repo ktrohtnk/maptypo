@@ -127,10 +127,10 @@ const MAP_STYLE_LIGHT = [
   // 3. お店などのPOIテキストを非表示
   { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
   
-  // 4. ベースカラー (ブルーグレーに調整)
-  { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#DAE2E6" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#C6D2D8" }] },
-  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#CCD6DC" }] },
+  // 4. ベースカラー (少し暗く調整)
+  { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#E0E0E0" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#D0D0D0" }] },
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#D4D4D4" }] },
   
   // 5. 道を「純白」にしつつ、すべての道に「極薄グレーの縁取り」をつける
   { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#FFFFFF" }] },
