@@ -8,6 +8,8 @@ let drawnLayers = [];
 let lastTraceResults = null;
 let lastTextColorHex = null;
 let lastIsRandomColor = false;
+let lastLoc = null;
+let lastAddressEn = "";
 let currentAnimationId = 0;
 
 const OVERPASS_ENDPOINTS = [
@@ -227,6 +229,26 @@ async function startTrace() {
       lastTraceResults = traceResults;
       lastTextColorHex = textColorHex;
       lastIsRandomColor = isRandomColor;
+      lastLoc = loc;
+      
+      lastAddressEn = address;
+      if (address === '福岡市 薬院' && text === 'ROAD\nTRACER') {
+        lastAddressEn = "Yakuin, Fukuoka, Japan";
+      } else {
+        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${loc.lat}&lon=${loc.lon}&format=json&accept-language=en`)
+          .then(r => r.json())
+          .then(d => {
+            if (d && d.address) {
+              const parts = [];
+              if (d.address.suburb) parts.push(d.address.suburb);
+              if (d.address.city || d.address.city_district || d.address.town || d.address.village) {
+                parts.push(d.address.city || d.address.city_district || d.address.town || d.address.village);
+              }
+              if (d.address.country) parts.push(d.address.country);
+              if (parts.length > 0) lastAddressEn = parts.join(', ');
+            }
+          }).catch(e => console.log('Reverse geocoding failed', e));
+      }
       
       currentAnimationId++;
       const myAnimationId = currentAnimationId;
@@ -319,6 +341,28 @@ async function startTrace() {
     lastTraceResults = traceResults;
     lastTextColorHex = textColorHex;
     lastIsRandomColor = isRandomColor;
+    lastLoc = loc;
+    
+    // SVGのクレジット用に英語住所をバックグラウンド取得
+    lastAddressEn = address; // fallback
+    if (address === '福岡市 薬院' && text === 'ROAD\nTRACER') {
+      lastAddressEn = "Yakuin, Fukuoka, Japan";
+    } else {
+      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${loc.lat}&lon=${loc.lon}&format=json&accept-language=en`)
+        .then(r => r.json())
+        .then(d => {
+          if (d && d.address) {
+            const parts = [];
+            if (d.address.suburb) parts.push(d.address.suburb);
+            if (d.address.city || d.address.city_district || d.address.town || d.address.village) {
+              parts.push(d.address.city || d.address.city_district || d.address.town || d.address.village);
+            }
+            if (d.address.country) parts.push(d.address.country);
+            if (parts.length > 0) lastAddressEn = parts.join(', ');
+          }
+        }).catch(e => console.log('Reverse geocoding failed', e));
+    }
+    
     currentAnimationId++;
     const myAnimationId = currentAnimationId;
     await animateDrawing(traceResults, textColorHex, isRandomColor, myAnimationId);
@@ -591,10 +635,23 @@ function downloadSVG() {
     }
   }
 
+  // SVGにクレジット（住所・座標）を追加
+  const latStr = lastLoc ? Math.abs(lastLoc.lat).toFixed(4) + '° ' + (lastLoc.lat >= 0 ? 'N' : 'S') : '';
+  const lonStr = lastLoc ? Math.abs(lastLoc.lon).toFixed(4) + '° ' + (lastLoc.lon >= 0 ? 'E' : 'W') : '';
+  const coordStr = latStr && lonStr ? `${latStr}, ${lonStr}` : '';
+  const creditColor = '#888888';
+  
+  const creditSvg = `
+  <g font-family="sans-serif" font-size="12" fill="${creditColor}" opacity="0.8">
+    <text x="${svgWidth - 20}" y="${Math.round(svgHeight) - 36}" text-anchor="end" font-weight="bold">ROAD TRACER v6.2</text>
+    <text x="${svgWidth - 20}" y="${Math.round(svgHeight) - 20}" text-anchor="end">${lastAddressEn} / ${coordStr}</text>
+  </g>`;
+
   const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${Math.round(svgHeight)}" viewBox="0 0 ${svgWidth} ${Math.round(svgHeight)}">
   <rect width="100%" height="100%" fill="${bgColor}" />
-${pathsSvg}</svg>`;
+${pathsSvg}${creditSvg}
+</svg>`;
 
   const blob = new Blob([svg], { type: 'image/svg+xml' });
   const url = URL.createObjectURL(blob);
