@@ -278,7 +278,22 @@ async function startTrace() {
     setStatus('Searching location...', 10);
     
     let loc, ways;
-    loc = await geocode(address);
+    // オープニングは毎回APIを叩かず、超軽量に最適化されたローカルキャッシュから一瞬で読み込む
+    if (address === '福岡市 薬院' && text === 'ROAD\nTRACER') {
+      setStatus('Loading ultra-lightweight map data...', 20);
+      try {
+        const res = await fetch('fukuoka_yakuin_optimized.json');
+        if (!res.ok) throw new Error('File not found');
+        const data = await res.json();
+        loc = data.loc;
+        ways = data.ways;
+      } catch (e) {
+        console.warn('Local data not found, falling back to API', e);
+        loc = await geocode(address);
+      }
+    } else {
+      loc = await geocode(address);
+    }
     
     // キャンバス（地図データ）の取得範囲の安全上限
     const MAX_RADIUS = 3500; 
