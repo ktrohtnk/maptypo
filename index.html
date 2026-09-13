@@ -6,7 +6,7 @@
   <title>Road Letter Tracer | 道路文字ジェネレーター</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&amp;family=Space+Grotesk:wght@400;600;700&amp;family=Space+Mono:wght@700&amp;display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=11.7" />
+  <link rel="stylesheet" href="style.css?v=11.8" />
 </head>
 <body>
   <div id="app">
@@ -15,16 +15,18 @@
       <aside id="sidebar-left">
         <div class="search-header">
           <h1 class="logo-text" style="align-items: flex-end;">
-            <svg viewBox="0 0 225 36" style="flex: 1 1 auto; width: 100%; height: auto; min-width: 0; margin-top: -5px; overflow: visible;">
-              <!-- アウトライン結合のための2層構造：下層（縁取り専用） -->
-              <text font-family="'Quicksand', sans-serif" font-weight="700" font-size="34" letter-spacing="-3" fill="none" stroke="var(--text)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">
-                <tspan x="0" y="28">ROAD TRACER</tspan>
-              </text>
-              <!-- 上層（塗り専用：下層の線の内側をすべて隠すことで完全な合体を表現） -->
-              <text font-family="'Quicksand', sans-serif" font-weight="700" font-size="34" letter-spacing="-3" fill="var(--panel)" stroke="none">
-                <tspan x="0" y="28">ROAD TRACER</tspan>
-              </text>
-            </svg>
+            <div style="flex: 1 1 auto; min-width: 0; display: block;">
+              <svg viewBox="0 0 225 36" style="width: 100%; display: block; margin-top: -5px; overflow: visible;">
+                <!-- アウトライン結合のための2層構造：下層（縁取り専用） -->
+                <text font-family="'Quicksand', sans-serif" font-weight="700" font-size="34" letter-spacing="-3" fill="none" stroke="var(--text)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">
+                  <tspan x="0" y="28">ROAD TRACER</tspan>
+                </text>
+                <!-- 上層（塗り専用：下層の線の内側をすべて隠すことで完全な合体を表現） -->
+                <text font-family="'Quicksand', sans-serif" font-weight="700" font-size="34" letter-spacing="-3" fill="var(--panel)" stroke="none">
+                  <tspan x="0" y="28">ROAD TRACER</tspan>
+                </text>
+              </svg>
+            </div>
             <span class="version" style="vertical-align: bottom; margin-bottom: 6px; margin-left: -30px; flex-shrink: 0; position: relative; z-index: 2;">v6.2</span>
           </h1>
           <p class="search-desc" style="margin: 0; line-height: 1.6;">
