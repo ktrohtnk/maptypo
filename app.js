@@ -130,26 +130,23 @@ const MAP_STYLE_LIGHT = [
   // 3. お店などのPOIテキストを非表示
   { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
   
-  // 4. 区や市などの「地域の境界線（区切り線）」を非表示にしてノイズを消す
-  { featureType: "administrative", elementType: "geometry", stylers: [{ visibility: "off" }] },
-  
-  // 5. ベースカラー (少し暗く調整)
+  // 4. ベースカラー (少し暗く調整)
   { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#E0E0E0" }] },
   { featureType: "water", elementType: "geometry", stylers: [{ color: "#D0D0D0" }] },
   { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#D4D4D4" }] },
   
-  // 6. 道を「純白」にしつつ、すべての道に「極薄グレーの縁取り」をつける
+  // 5. 道を「純白」にしつつ、すべての道に「極薄グレーの縁取り」をつける
   { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#FFFFFF" }] },
   { featureType: "road", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#D8D8D8" }, { weight: 1 }] },
   { featureType: "road.arterial", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#CCCCCC" }, { weight: 1 }] },
   { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#C0C0C0" }, { weight: 1.5 }] },
   
-  // 7. 文字（指定の美しいブルーグレー）
+  // 6. 文字（指定の美しいブルーグレー）
   { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#b4bcbf" }] },
   { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#FFFFFF" }, { weight: 3 }] },
   { featureType: "road.local", elementType: "labels", stylers: [{ visibility: "off" }] },
   
-  // 8. 線路非表示
+  // 7. 線路非表示
   { featureType: "transit.line", elementType: "geometry", stylers: [{ visibility: "off" }] }
 ];
 
@@ -157,7 +154,6 @@ const MAP_STYLE_DARK = [
   { featureType: "all", stylers: [{ saturation: -100 }] },
   { featureType: "all", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
   { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
-  { featureType: "administrative", elementType: "geometry", stylers: [{ visibility: "off" }] },
   { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#222222" }] },
   { featureType: "transit.line", elementType: "geometry", stylers: [{ visibility: "off" }] },
   { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#888888" }] },
