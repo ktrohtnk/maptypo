@@ -641,7 +641,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     debounceTimer = setTimeout(async () => {
       try {
-        let url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val)}&format=json&limit=5`;
+        // featuretype=settlement で「町・市・集落」などの地名レベルに限定（お店や建物を排除）
+        let url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val)}&format=json&limit=5&featuretype=settlement`;
         // 2. IPから現在地が判定できていれば、その周辺を「優先的に」検索（※除外はしない）
         if (userViewbox) {
           url += `&viewbox=${userViewbox}`;
