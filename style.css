@@ -26,7 +26,7 @@ body { font-family: 'Quicksand', -apple-system, sans-serif; background: var(--bg
 #main-layout { display: flex; flex-direction: row; flex: 1; width: 100%; height: 100%; overflow: hidden; position: relative; }
 
 /* Sidebar (Right) */
-#sidebar-left { order: 2; width: 360px; flex-shrink: 0; background: var(--panel); border-left: 1px solid var(--border); border-right: none; padding: 40px 30px; display: flex; flex-direction: column; gap: 30px; z-index: 1000; box-shadow: -2px 0 10px rgba(0,0,0,0.5); overflow-y: auto; }
+#sidebar-left { order: 2; width: 360px; flex-shrink: 0; background: var(--panel); border-left: 1px solid var(--border); border-right: none; padding: 40px 30px; display: flex; flex-direction: column; gap: 30px; z-index: 1000; box-shadow: -2px 0 10px rgba(0,0,0,0.5); overflow-y: auto; overflow-x: hidden; }
 #map-area { order: 1; flex: 1; height: 100%; position: relative; overflow: hidden; background: #222; }
 .sidebar-header h1 { font-size: 1.3rem; font-weight: 500; margin-bottom: 8px; letter-spacing: -0.5px; }
 .search-desc { color: var(--text2); font-size: 0.85rem; line-height: 1.5; }
