@@ -98,11 +98,9 @@ async function fetchRoads(lat, lon, radiusM) {
   // Overpass APIの安定性とデータ精度のバランスを取るため、最大半径を3500m（7km四方）に設定
   const safeRadius = Math.min(radiusM, 3500);
   
-  // 取得半径が小さい（文字が細かい）場合は路地裏まで全取得して解像度を最大化。
-  // 半径が巨大な場合は、データ量が数十倍に膨れ上がりサーバーが重くなるため細かすぎる路地を除外する。
-  const highwayTypes = radiusM <= 2000 
-    ? "^(motorway|trunk|primary|secondary|tertiary|residential|unclassified|pedestrian|footway|path|service|living_street|track)$"
-    : "^(motorway|trunk|primary|secondary|tertiary|residential|unclassified|pedestrian|footway|path)$";
+  // ユーザーの強い要望により、「どんなに広範囲（長文）であっても絶対に文字の精度を落とさない」ため、
+  // 路地裏（service, living_street, track）や歩道を常に全取得します。（処理時間はかかりますが精度は最高になります）
+  const highwayTypes = "^(motorway|trunk|primary|secondary|tertiary|residential|unclassified|pedestrian|footway|path|service|living_street|track)$";
 
   const dLat = safeRadius / 111320, dLon = safeRadius / (111320 * Math.cos(lat * Math.PI / 180));
   const query = `[out:json][timeout:15];way["highway"~"${highwayTypes}"](${lat-dLat},${lon-dLon},${lat+dLat},${lon+dLon});out geom;`;
