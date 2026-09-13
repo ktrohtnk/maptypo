@@ -642,13 +642,18 @@ function downloadSVG() {
   const creditColor = '#888888';
   
   const creditSvg = `
-  <g font-family="sans-serif" font-size="12" fill="${creditColor}" opacity="0.8">
-    <text x="${svgWidth - 20}" y="${Math.round(svgHeight) - 36}" text-anchor="end" font-weight="bold">ROAD TRACER v6.2</text>
-    <text x="${svgWidth - 20}" y="${Math.round(svgHeight) - 20}" text-anchor="end">${lastAddressEn} / ${coordStr}</text>
+  <g font-family="'Quicksand', sans-serif" font-weight="300" fill="${creditColor}" opacity="0.8">
+    <text x="${svgWidth - 20}" y="${Math.round(svgHeight) - 36}" font-size="12" text-anchor="end" letter-spacing="1">ROAD TRACER v6.2</text>
+    <text x="${svgWidth - 20}" y="${Math.round(svgHeight) - 20}" font-size="10" text-anchor="end" letter-spacing="0.5">${lastAddressEn} / ${coordStr}</text>
   </g>`;
 
   const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${Math.round(svgHeight)}" viewBox="0 0 ${svgWidth} ${Math.round(svgHeight)}">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300&amp;display=swap');
+    </style>
+  </defs>
   <rect width="100%" height="100%" fill="${bgColor}" />
 ${pathsSvg}${creditSvg}
 </svg>`;
