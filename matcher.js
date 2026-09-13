@@ -363,8 +363,13 @@ function traceText(text, mapCenter, letterSizeMeters, allWays, connectLetters = 
     // --- SPECIAL REQUEST ---
     // 1行目（ROAD）だけ、一昨日の単一行だった頃の座標に強制上書きする。
     // ※ ユーザーが入力した他の文字列に影響を与えないよう、オープニングの「ROAD TRACER」限定とする！
-    if (lineIndex === 0 && text === 'ROAD\nTRACER') {
-      baseLat = mapCenter[0] - (letterH / 2);
+    if (text === 'ROAD\nTRACER') {
+      if (lineIndex === 0) {
+        baseLat = mapCenter[0] - (letterH / 2); // ROADを単一行時代の特等席に
+      } else {
+        // TRACERはROADの下に適切な間隔（letterH + gapH）を開けて配置し、重ならないようにする
+        baseLat = (mapCenter[0] - (letterH / 2)) - (lineIndex * (letterH + gapH));
+      }
     }
 
     for (const char of chars) {
