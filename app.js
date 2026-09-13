@@ -120,14 +120,35 @@ async function fetchRoads(lat, lon, radiusM) {
   throw new Error('現在、世界の地図サーバー全体が大変混雑しており、データが取得できませんでした。3〜5分ほどお待ちいただいてから再度お試しください。');
 }
 
+const MAP_STYLE_LIGHT = [
+  { featureType: "all", elementType: "geometry", stylers: [{ color: "#F5F5F5" }] },
+  { featureType: "all", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+  { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#777777" }] },
+  { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#F5F5F5" }, { weight: 2.5 }] },
+  { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#FFFFFF" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#E0E0E0" }, { weight: 0.5 }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#E5E5E5" }] }
+];
+
+const MAP_STYLE_DARK = [
+  { featureType: "all", elementType: "geometry", stylers: [{ color: "#1D1D1F" }] },
+  { featureType: "all", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+  { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#888888" }] },
+  { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#1D1D1F" }, { weight: 2.5 }] },
+  { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#2B2B2D" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#111111" }, { weight: 0.5 }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#111111" }] }
+];
+
 function initMap(lat, lon, zoom, theme) {
-  const mapId = '25667c8c3bcfb9ad2d5603ac';
-  
+  const isDark = theme === 'cyberpunk' || theme === 'map-blue';
+  const currentStyle = isDark ? MAP_STYLE_DARK : MAP_STYLE_LIGHT;
+
   if (!map) {
     map = new google.maps.Map(document.getElementById('map'), {
       center: { lat: lat, lng: lon },
       zoom: zoom,
-      mapId: mapId,
+      styles: currentStyle, // プログラムで強制的にスタイルを上書き！
       disableDefaultUI: true,
       zoomControl: true,
       zoomControlOptions: {
@@ -137,6 +158,7 @@ function initMap(lat, lon, zoom, theme) {
   } else {
     map.setCenter({ lat: lat, lng: lon });
     map.setZoom(zoom);
+    map.setOptions({ styles: currentStyle }); // テーマ変更時に地図の色も変える
   }
 
   // data-theme属性をbodyに当ててCSSレベルでテーマを制御
