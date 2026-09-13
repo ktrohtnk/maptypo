@@ -122,26 +122,36 @@ async function fetchRoads(lat, lon, radiusM) {
 
 const MAP_STYLE_LIGHT = [
   { featureType: "all", stylers: [{ saturation: -100 }] }, // 完全モノクロ
-  { featureType: "all", elementType: "labels.icon", stylers: [{ visibility: "off" }] }, // ピン（アイコン）をすべて非表示
-  { featureType: "all", elementType: "geometry", stylers: [{ color: "#EDEDED" }] }, // 背景を少し濃くして道を際立たせる
-  { featureType: "landscape.man_made", elementType: "geometry", stylers: [{ color: "#E4E4E4" }] }, // 建物
-  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#E2E2E2" }] }, // 公園
+  { featureType: "all", elementType: "labels.icon", stylers: [{ visibility: "off" }] }, // ピンを非表示
+  { featureType: "all", elementType: "geometry", stylers: [{ color: "#EDEDED" }] }, // 背景
+  
+  // 建物をクッキリさせる（塗りつぶしと枠線）
+  { featureType: "landscape.man_made", elementType: "geometry.fill", stylers: [{ color: "#E0E0E0" }] },
+  { featureType: "landscape.man_made", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#D4D4D4" }, { weight: 1 }] },
+  { featureType: "poi", elementType: "geometry.fill", stylers: [{ color: "#E0E0E0" }] }, // 商業施設などの建物
+  
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#DCDCDC" }] }, // 公園
   { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#777777" }] },
   { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#EDEDED" }, { weight: 2.5 }] },
-  { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#FFFFFF" }] }, // 道を真っ白に
-  { featureType: "road", elementType: "geometry.stroke", stylers: [{ visibility: "off" }] }, // 細い道の枠線を消してスッキリさせる
-  { featureType: "road.arterial", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#D0D0D0" }, { weight: 1 }] }, // 幹線道路の枠線
-  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#B0B0B0" }, { weight: 1.5 }] }, // 高速道路の枠線
-  { featureType: "road.local", elementType: "labels", stylers: [{ visibility: "off" }] }, // 「〇〇号線」などの細い道の名前を非表示
+  { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#FFFFFF" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ visibility: "off" }] },
+  { featureType: "road.arterial", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#D0D0D0" }, { weight: 1 }] },
+  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#B0B0B0" }, { weight: 1.5 }] },
+  { featureType: "road.local", elementType: "labels", stylers: [{ visibility: "off" }] },
   { featureType: "water", elementType: "geometry", stylers: [{ color: "#D8D8D8" }] }
 ];
 
 const MAP_STYLE_DARK = [
   { featureType: "all", stylers: [{ saturation: -100 }] },
-  { featureType: "all", elementType: "labels.icon", stylers: [{ visibility: "off" }] }, // ピン（アイコン）をすべて非表示
+  { featureType: "all", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
   { featureType: "all", elementType: "geometry", stylers: [{ color: "#222222" }] },
-  { featureType: "landscape.man_made", elementType: "geometry", stylers: [{ color: "#2A2A2A" }] },
-  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#1E1E1E" }] },
+  
+  // 建物をクッキリさせる（ダークモード）
+  { featureType: "landscape.man_made", elementType: "geometry.fill", stylers: [{ color: "#2D2D2D" }] },
+  { featureType: "landscape.man_made", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#1A1A1A" }, { weight: 1 }] },
+  { featureType: "poi", elementType: "geometry.fill", stylers: [{ color: "#2D2D2D" }] },
+  
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#262626" }] },
   { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#888888" }] },
   { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#222222" }, { weight: 2.5 }] },
   { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#111111" }] },
