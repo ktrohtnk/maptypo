@@ -122,6 +122,7 @@ async function fetchRoads(lat, lon, radiusM) {
 
 const MAP_STYLE_LIGHT = [
   { featureType: "all", stylers: [{ saturation: -100 }] }, // 完全モノクロ
+  { featureType: "all", elementType: "labels.icon", stylers: [{ visibility: "off" }] }, // ピン（アイコン）をすべて非表示
   { featureType: "all", elementType: "geometry", stylers: [{ color: "#EDEDED" }] }, // 背景を少し濃くして道を際立たせる
   { featureType: "landscape.man_made", elementType: "geometry", stylers: [{ color: "#E4E4E4" }] }, // 建物
   { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#E2E2E2" }] }, // 公園
@@ -137,6 +138,7 @@ const MAP_STYLE_LIGHT = [
 
 const MAP_STYLE_DARK = [
   { featureType: "all", stylers: [{ saturation: -100 }] },
+  { featureType: "all", elementType: "labels.icon", stylers: [{ visibility: "off" }] }, // ピン（アイコン）をすべて非表示
   { featureType: "all", elementType: "geometry", stylers: [{ color: "#222222" }] },
   { featureType: "landscape.man_made", elementType: "geometry", stylers: [{ color: "#2A2A2A" }] },
   { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#1E1E1E" }] },
