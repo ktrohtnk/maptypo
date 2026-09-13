@@ -51,17 +51,14 @@
           </div>
 
           <div class="filter-group">
-            <label class="filter-label">Theme</label>
-            <select id="theme-select">
-              <option value="minimal" selected>Minimal (Black)</option>
-              <option value="line-blue">Line (Blue)</option>
-              <option value="line-pink">Line (Pink)</option>
-              <option value="solid-blue">Solid BG (Blue)</option>
-              <option value="solid-pink">Solid BG (Pink)</option>
-              <option value="map-blue">Map (Blue + White)</option>
-              <option value="cyberpunk">Cyberpunk (Neon)</option>
-              <option value="monochrome">Monochrome</option>
-            </select>
+            <label class="filter-label">Text Color</label>
+            <div style="display: flex; gap: 8px; align-items: center; background: rgba(0,0,0,0.03); padding: 6px; border-radius: 4px; border: 1px solid #ddd;">
+              <input type="color" id="color-picker" value="#2a3b4c" style="flex: 1; height: 32px; padding: 0; border: none; cursor: pointer; background: transparent;">
+              <label style="font-size: 0.85em; display: flex; align-items: center; gap: 4px; cursor: pointer; color: #555;">
+                <input type="checkbox" id="random-color-checkbox">
+                Random Tone
+              </label>
+            </div>
           </div>
 
           <div class="filter-group">

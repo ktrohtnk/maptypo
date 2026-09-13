@@ -6,7 +6,8 @@
 let map = null;
 let drawnLayers = [];
 let lastTraceResults = null;
-let lastTheme = 'minimal';
+let lastTextColorHex = null;
+let lastIsRandomColor = false;
 let currentAnimationId = 0;
 
 const OVERPASS_ENDPOINTS = [
@@ -164,9 +165,8 @@ const MAP_STYLE_DARK = [
   { featureType: "road.local", elementType: "labels", stylers: [{ visibility: "off" }] }
 ];
 
-function initMap(lat, lon, zoom, theme) {
-  const isDark = theme === 'cyberpunk' || theme === 'map-blue';
-  const currentStyle = isDark ? MAP_STYLE_DARK : MAP_STYLE_LIGHT;
+function initMap(lat, lon, zoom) {
+  const currentStyle = MAP_STYLE_LIGHT;
 
   if (!map) {
     map = new google.maps.Map(document.getElementById('map'), {
@@ -205,28 +205,30 @@ async function startTrace() {
     .toUpperCase()
     .replace(/[^A-Z0-9\u30A0-\u30F6\u30FC\u30F3!?♡ \n]/g, '');
   const letterSize = parseInt(document.getElementById('size-select').value);
-  const theme = document.getElementById('theme-select').value;
+  const textColorHex = document.getElementById('color-picker').value;
+  const isRandomColor = document.getElementById('random-color-checkbox').checked;
   const drawStyle = document.getElementById('style-select').value;
 
   if (!address || !text) return alert('場所と文字を入力してください');
 
-  // キャッシュキーの作成（住所・文字・サイズ・スタイルが同じならキャッシュを使う）
-  const cacheKey = `maptypo_cache_v2_${btoa(unescape(encodeURIComponent(address + text + letterSize + drawStyle)))}`;
+  // キャッシュキーの作成（住所・文字・サイズ・スタイル・色が同じならキャッシュを使う）
+  const cacheKey = `maptypo_cache_v2_${btoa(unescape(encodeURIComponent(address + text + letterSize + drawStyle + textColorHex + isRandomColor)))}`;
   const cached = localStorage.getItem(cacheKey);
 
   if (cached) {
     try {
       const { loc, zoom, traceResults } = JSON.parse(cached);
-      initMap(loc.lat, loc.lon, zoom, theme);
+      initMap(loc.lat, loc.lon, zoom);
       setStatus('Trace loaded from cache...', 90);
       
       // ダウンロード用に保存
       lastTraceResults = traceResults;
-      lastTheme = theme;
+      lastTextColorHex = textColorHex;
+      lastIsRandomColor = isRandomColor;
       
       currentAnimationId++;
       const myAnimationId = currentAnimationId;
-      await animateDrawing(traceResults, theme, myAnimationId);
+      await animateDrawing(traceResults, textColorHex, isRandomColor, myAnimationId);
       
       if (currentAnimationId === myAnimationId) {
         setStatus('Trace complete.', 100);
@@ -288,7 +290,7 @@ async function startTrace() {
     let zoom = 14;
     if (requiredSize > 3000) zoom = 13;
     if (requiredSize > 5000) zoom = 12;
-    initMap(loc.lat, loc.lon, zoom, theme);
+    initMap(loc.lat, loc.lon, zoom);
 
     if (!ways) {
       setStatus('Fetching road network...', 40);
@@ -313,10 +315,11 @@ async function startTrace() {
     
     // Animate the drawing
     lastTraceResults = traceResults;
-    lastTheme = theme;
+    lastTextColorHex = textColorHex;
+    lastIsRandomColor = isRandomColor;
     currentAnimationId++;
     const myAnimationId = currentAnimationId;
-    await animateDrawing(traceResults, theme, myAnimationId);
+    await animateDrawing(traceResults, textColorHex, isRandomColor, myAnimationId);
 
     if (currentAnimationId === myAnimationId) {
       setStatus('Trace complete.', 100);
@@ -332,35 +335,41 @@ async function startTrace() {
   }
 }
 
-async function animateDrawing(traceResults, theme, animationId) {
-  let colors;
-  if (theme === 'line-blue') {
-    colors = ['#1E90FF', '#005FCC'];
-  } else if (theme === 'line-pink') {
-    colors = ['#FF3EB5', '#CC0066'];
-  } else if (theme === 'map-blue') {
-    colors = ['#FF3EB5', '#FF69D4']; // ホットピンクのライン（ダークネイビー地図に映える）
-  } else if (theme === 'solid-blue' || theme === 'minimal-blue') {
-    colors = ['#FFFFFF', '#E0E0E0'];
-  } else if (theme === 'solid-pink' || theme === 'minimal-pink') {
-    colors = ['#1D1D1F', '#333333'];
-  } else if (theme === 'cyberpunk') {
-    colors = ['#ff2a6d', '#05d9e8', '#01ffc3'];
-  } else if (theme === 'monochrome') {
-    colors = ['#1D1D1F'];
-  } else {
-    colors = ['#1D1D1F', '#E24F33', '#386641'];
+function hexToHSL(H) {
+  let r = 0, g = 0, b = 0;
+  if (H.length == 7) {
+    r = parseInt(H.substring(1,3), 16);
+    g = parseInt(H.substring(3,5), 16);
+    b = parseInt(H.substring(5,7), 16);
+  }
+  r /= 255; g /= 255; b /= 255;
+  let cmin = Math.min(r,g,b), cmax = Math.max(r,g,b), delta = cmax - cmin, h = 0, s = 0, l = 0;
+  if (delta == 0) h = 0;
+  else if (cmax == r) h = ((g - b) / delta) % 6;
+  else if (cmax == g) h = (b - r) / delta + 2;
+  else h = (r - g) / delta + 4;
+  h = Math.round(h * 60);
+  if (h < 0) h += 360;
+  l = (cmax + cmin) / 2;
+  s = delta == 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
+  s = +(s * 100).toFixed(1);
+  l = +(l * 100).toFixed(1);
+  return { h, s, l };
+}
+
+async function animateDrawing(traceResults, textColorHex, isRandomColor, animationId) {
+  let shadowColor = '#000000'; 
+  let shadowOpacity = 0.15;
+  
+  const baseHsl = hexToHSL(textColorHex);
+  // Ensure we have enough saturation and a reasonable lightness for random colors to be visible
+  let randS = baseHsl.s < 30 ? 70 : baseHsl.s;
+  let randL = baseHsl.l;
+  if (baseHsl.s < 30) {
+    if (randL < 20) randL = 40; // If they picked black, make random colors visible
+    if (randL > 80) randL = 60; // If they picked white
   }
 
-  // Shadow (background road line) settings
-  let shadowColor, shadowOpacity;
-  if (theme === 'cyberpunk') {
-    shadowColor = '#ffffff'; shadowOpacity = 0.1;
-  } else if (theme === 'map-blue') {
-    shadowColor = '#FFFFFF'; shadowOpacity = 0.6; // 白い道路ラインを強調
-  } else {
-    shadowColor = '#000000'; shadowOpacity = 0.15;
-  }
   let colorIdx = 0;
 
   // 1. 全ての描画座標を収集し、カメラを完璧にフィットさせる（自動ズーム＆センタリング）
@@ -388,7 +397,11 @@ async function animateDrawing(traceResults, theme, animationId) {
   for (const result of traceResults) {
     if (animationId !== currentAnimationId) return; // Abort if cancelled
     
-    const color = colors[colorIdx % colors.length];
+    let color = textColorHex;
+    if (isRandomColor) {
+      const randH = Math.floor(Math.random() * 360);
+      color = `hsl(${randH}, ${randS}%, ${randL}%)`;
+    }
     colorIdx++;
 
     for (const path of result.paths) {
@@ -536,42 +549,36 @@ function downloadSVG() {
     }
   }
 
-  // 緯度経度をSVGのピクセル座標に変換するスケール
-  const padding = 60;
-  const svgWidth = 1200;
-  const latRange = maxLat - minLat || 0.001;
-  const lonRange = maxLon - minLon || 0.001;
-  const scale = (svgWidth - padding * 2) / lonRange;
-  const svgHeight = latRange * scale + padding * 2;
+  const padding = 0.002;
+  minLat -= padding; maxLat += padding;
+  minLon -= padding; maxLon += padding;
 
-  const toX = lon => (lon - minLon) * scale + padding;
-  const toY = lat => (maxLat - lat) * scale + padding; // lat is inverted
+  const widthDeg = maxLon - minLon;
+  const heightDeg = maxLat - minLat;
+  const svgWidth = 800;
+  const svgHeight = svgWidth * (heightDeg / widthDeg);
 
-  // テーマに合わせた色
-  let colors, bgColor;
-  if (lastTheme === 'cyberpunk') {
-    colors = ['#ff2a6d', '#05d9e8', '#01ffc3']; bgColor = '#0d0d0d';
-  } else if (lastTheme === 'monochrome') {
-    colors = ['#1D1D1F']; bgColor = '#F5F5F0';
-  } else if (lastTheme === 'line-blue') {
-    colors = ['#1E90FF', '#005FCC']; bgColor = '#F5F5F0';
-  } else if (lastTheme === 'line-pink') {
-    colors = ['#FF3EB5', '#CC0066']; bgColor = '#F5F5F0';
-  } else if (lastTheme === 'solid-blue' || lastTheme === 'minimal-blue') {
-    colors = ['#FFFFFF', '#E0E0E0']; bgColor = '#0000FF';
-  } else if (lastTheme === 'solid-pink' || lastTheme === 'minimal-pink') {
-    colors = ['#1D1D1F', '#333333']; bgColor = '#FF3EB5';
-  } else if (lastTheme === 'map-blue') {
-    colors = ['#FF3EB5', '#FF69D4']; bgColor = '#1a4fff';
-  } else {
-    colors = ['#1D1D1F', '#E24F33', '#386641']; bgColor = '#F5F5F0';
+  const toX = (lon) => ((lon - minLon) / widthDeg) * svgWidth;
+  const toY = (lat) => ((maxLat - lat) / heightDeg) * svgHeight;
+
+  let bgColor = '#F5F5F0';
+  
+  const baseHsl = hexToHSL(lastTextColorHex || '#2a3b4c');
+  let randS = baseHsl.s < 30 ? 70 : baseHsl.s;
+  let randL = baseHsl.l;
+  if (baseHsl.s < 30) {
+    if (randL < 20) randL = 40;
+    if (randL > 80) randL = 60;
   }
 
   let pathsSvg = '';
-  let colorIdx = 0;
   for (const result of lastTraceResults) {
-    const color = colors[colorIdx % colors.length];
-    colorIdx++;
+    let color = lastTextColorHex || '#2a3b4c';
+    if (lastIsRandomColor) {
+      const randH = Math.floor(Math.random() * 360);
+      color = `hsl(${randH}, ${randS}%, ${randL}%)`;
+    }
+    
     for (const path of result.paths) {
       const points = path
         .filter(p => Array.isArray(p) && p.length >= 2 && !isNaN(p[0]) && !isNaN(p[1]))
