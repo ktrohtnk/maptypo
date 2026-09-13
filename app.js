@@ -204,12 +204,11 @@ async function startTrace() {
   const letterSize = parseInt(document.getElementById('size-select')?.value || '500');
   const textColorHex = document.getElementById('color-picker')?.value || '#111111';
   const isRandomColor = document.getElementById('random-color-checkbox')?.checked || false;
-  const drawStyle = document.getElementById('style-select')?.value || 'normal';
 
   if (!address || !text) return alert('場所と文字を入力してください');
 
-  // キャッシュキーの作成（住所・文字・サイズ・スタイル・色が同じならキャッシュを使う）
-  const cacheKey = `maptypo_cache_v2_${btoa(unescape(encodeURIComponent(address + text + letterSize + drawStyle + textColorHex + isRandomColor)))}`;
+  // キャッシュキーの作成（住所・文字・サイズ・色が同じならキャッシュを使う）
+  const cacheKey = `maptypo_cache_v2_${btoa(unescape(encodeURIComponent(address + text + letterSize + textColorHex + isRandomColor)))}`;
   const cached = localStorage.getItem(cacheKey);
 
   if (cached) {
@@ -299,7 +298,7 @@ async function startTrace() {
 
     setStatus('Mapping typography...', 70);
     // Use the potentially scaled-down actualLetterSize to prevent overlapping
-    const isConnected = drawStyle === 'connected';
+    const isConnected = false; // "Normal" mode only
     const traceResults = RoadTracer.traceText(text, [loc.lat, loc.lon], actualLetterSize, ways, isConnected);
 
     try {
