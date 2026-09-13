@@ -63,12 +63,9 @@ function setBtn(loading) {
   document.getElementById('search-spinner').classList.toggle('hidden', !loading);
 }
 
-async function geocode(address, regionCode) {
+async function geocode(address) {
   const fetchGeocode = async (q) => {
     let url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`;
-    if (regionCode) {
-      url += `&countrycodes=${regionCode}`;
-    }
     const res = await fetch(url, { headers: { 'User-Agent': 'RoadTracer/1.0' } });
     return await res.json();
   };
@@ -211,12 +208,10 @@ async function startTrace() {
   const theme = document.getElementById('theme-select').value;
   const drawStyle = document.getElementById('style-select').value;
 
-  const regionCode = document.getElementById('region-select') ? document.getElementById('region-select').value : 'jp';
-
   if (!address || !text) return alert('場所と文字を入力してください');
 
-  // キャッシュキーの作成（住所・文字・サイズ・スタイル・地域が同じならキャッシュを使う）
-  const cacheKey = `maptypo_cache_v2_${btoa(unescape(encodeURIComponent(address + text + letterSize + drawStyle + regionCode)))}`;
+  // キャッシュキーの作成（住所・文字・サイズ・スタイルが同じならキャッシュを使う）
+  const cacheKey = `maptypo_cache_v2_${btoa(unescape(encodeURIComponent(address + text + letterSize + drawStyle)))}`;
   const cached = localStorage.getItem(cacheKey);
 
   if (cached) {
@@ -249,7 +244,7 @@ async function startTrace() {
     
     let loc, ways;
     // デフォルトの薬院の初期表示はAPIを使わず超軽量・高速に読み込む
-    if (address === '福岡市 薬院' && text === 'ROAD\nTRACER' && regionCode === 'jp') {
+    if (address === '福岡市 薬院' && text === 'ROAD\nTRACER') {
       setStatus('Loading ultra-lightweight map data...', 20);
       try {
         const res = await fetch('fukuoka_yakuin_optimized.json');
@@ -259,10 +254,10 @@ async function startTrace() {
         ways = data.ways;
       } catch (e) {
         console.warn('Local data not found, falling back to API', e);
-        loc = await geocode(address, regionCode);
+        loc = await geocode(address);
       }
     } else {
-      loc = await geocode(address, regionCode);
+      loc = await geocode(address);
     }
     
     // キャンバス（地図データ）の取得範囲の安全上限
@@ -604,3 +599,57 @@ ${pathsSvg}</svg>`;
 window.startTrace = startTrace;
 window.clearTrace = clearTrace;
 window.downloadSVG = downloadSVG;
+
+// ----------------------------------------------------
+// Location Autocomplete Logic
+// ----------------------------------------------------
+document.addEventListener('DOMContentLoaded', () => {
+  const locInput = document.getElementById('address-input');
+  const suggestionsList = document.getElementById('location-suggestions');
+  let debounceTimer;
+
+  if (!locInput || !suggestionsList) return;
+
+  locInput.addEventListener('input', (e) => {
+    clearTimeout(debounceTimer);
+    const val = e.target.value.trim();
+    
+    if (val.length < 2) {
+      suggestionsList.classList.add('hidden');
+      return;
+    }
+    
+    debounceTimer = setTimeout(async () => {
+      try {
+        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val)}&format=json&limit=5`;
+        const res = await fetch(url, { headers: { 'User-Agent': 'RoadTracer/1.0' } });
+        const data = await res.json();
+        
+        suggestionsList.innerHTML = '';
+        if (data.length > 0) {
+          data.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = item.display_name;
+            li.addEventListener('click', () => {
+              locInput.value = item.display_name;
+              suggestionsList.classList.add('hidden');
+            });
+            suggestionsList.appendChild(li);
+          });
+          suggestionsList.classList.remove('hidden');
+        } else {
+          suggestionsList.classList.add('hidden');
+        }
+      } catch (err) {
+        console.error('Autocomplete fetch error:', err);
+      }
+    }, 600); // 600ms debounce
+  });
+
+  // Hide suggestions when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!locInput.contains(e.target) && !suggestionsList.contains(e.target)) {
+      suggestionsList.classList.add('hidden');
+    }
+  });
+});
