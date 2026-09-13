@@ -622,7 +622,18 @@ function downloadSVG() {
     let color = lastTextColorHex || '#2a3b4c';
     if (lastIsRandomColor) {
       const randH = Math.floor(Math.random() * 360);
-      color = `hsl(${randH}, ${randS}%, ${randL}%)`;
+      
+      // Illustrator等との互換性のため、SVGのstrokeにはhsl()ではなくHexを使う
+      const s = randS / 100;
+      const l = randL / 100;
+      const k = n => (n + randH / 30) % 12;
+      const a = s * Math.min(l, 1 - l);
+      const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+      const toHex = x => {
+        const hex = Math.round(x * 255).toString(16);
+        return hex.length === 1 ? '0' + hex : hex;
+      };
+      color = `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`;
     }
     
     for (const path of result.paths) {
