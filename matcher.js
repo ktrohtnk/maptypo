@@ -362,8 +362,8 @@ function traceText(text, mapCenter, letterSizeMeters, allWays, connectLetters = 
     
     // --- SPECIAL REQUEST ---
     // 1行目（ROAD）だけ、一昨日の単一行だった頃の座標に強制上書きする。
-    // 2行目以降は通常の複数行計算（currentLatベース）のままにするため、TRACERの座標はズレない。
-    if (lineIndex === 0) {
+    // ※ ユーザーが入力した他の文字列に影響を与えないよう、オープニングの「ROAD TRACER」限定とする！
+    if (lineIndex === 0 && text === 'ROAD\nTRACER') {
       baseLat = mapCenter[0] - (letterH / 2);
     }
 
