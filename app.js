@@ -121,8 +121,8 @@ async function fetchRoads(lat, lon, radiusM) {
 }
 
 const MAP_STYLE_LIGHT = [
+  { featureType: "all", stylers: [{ saturation: -100 }] }, // すべての彩度をゼロ（完全モノクロ）にして赤や緑を無効化
   { featureType: "all", elementType: "geometry", stylers: [{ color: "#F5F5F5" }] },
-  { featureType: "all", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
   { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#777777" }] },
   { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#F5F5F5" }, { weight: 2.5 }] },
   { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#FFFFFF" }] },
@@ -131,8 +131,8 @@ const MAP_STYLE_LIGHT = [
 ];
 
 const MAP_STYLE_DARK = [
+  { featureType: "all", stylers: [{ saturation: -100 }] },
   { featureType: "all", elementType: "geometry", stylers: [{ color: "#1D1D1F" }] },
-  { featureType: "all", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
   { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#888888" }] },
   { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#1D1D1F" }, { weight: 2.5 }] },
   { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#2B2B2D" }] },
