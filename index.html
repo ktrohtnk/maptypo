@@ -16,7 +16,13 @@
         <div class="search-header" style="margin-bottom: 24px;">
           <h1 class="logo-text">
             <svg viewBox="0 0 145 68" style="width: 100%; height: auto; flex-shrink: 0; margin-top: -5px;">
-              <text font-family="'Space Grotesk', sans-serif" font-weight="700" font-size="40" letter-spacing="-4.5" fill="var(--panel)" stroke="var(--text)" stroke-width="1.2" paint-order="stroke fill">
+              <!-- アウトライン結合のための2層構造：下層（縁取り専用） -->
+              <text font-family="'Space Grotesk', sans-serif" font-weight="700" font-size="40" letter-spacing="-4.5" fill="none" stroke="var(--text)" stroke-width="2.4" stroke-linejoin="miter">
+                <tspan x="0" y="34">ROAD</tspan>
+                <tspan x="0" y="60">TRACER</tspan>
+              </text>
+              <!-- 上層（塗り専用：下層の線の内側をすべて隠すことで完全な合体を表現） -->
+              <text font-family="'Space Grotesk', sans-serif" font-weight="700" font-size="40" letter-spacing="-4.5" fill="var(--panel)" stroke="none">
                 <tspan x="0" y="34">ROAD</tspan>
                 <tspan x="0" y="60">TRACER</tspan>
               </text>
