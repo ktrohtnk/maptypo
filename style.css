@@ -14,13 +14,8 @@ body { font-family: 'Quicksand', -apple-system, sans-serif; background: var(--bg
 
 #app { display: flex; flex-direction: column; height: 100dvh; }
 
-#header {
-  height: 60px; border-bottom: 1px solid var(--border); background: var(--panel);
-  display: flex; align-items: center; padding: 0 30px; z-index: 10;
-}
-.logo-icon { display: none; }
-.logo-text { font-weight: 500; font-size: 1.1rem; letter-spacing: -0.5px; color: var(--text); }
-.version { font-size: 0.7rem; color: var(--text2); vertical-align: super; font-family: inherit; margin-left: 4px; font-weight: 400;}
+.logo-text { font-weight: 700; font-size: 2rem; letter-spacing: -1px; color: var(--text); margin-bottom: 12px; }
+.version { font-size: 0.9rem; color: var(--text2); font-weight: 400; margin-left: 6px; }
 
 /* 2-Column Layout */
 #main-layout { display: grid; grid-template-columns: 360px 1fr; flex: 1; overflow: hidden; }
@@ -131,13 +126,12 @@ body[data-theme="map-blue"] #map {
     height: 55dvh;
   }
 
-  #header {
-    height: 50px;
-    padding: 0 16px;
+  .logo-text {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
   }
-  
-  .sidebar-header {
-    display: none; /* スマホではヘッダーのタイトルを隠して省スペース化 */
+  .search-desc {
+    display: none; /* スマホでは説明文を隠して省スペース化 */
   }
 
   .primary-btn {
