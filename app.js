@@ -121,26 +121,31 @@ async function fetchRoads(lat, lon, radiusM) {
 }
 
 const MAP_STYLE_LIGHT = [
-  // 1. ピンをすべて非表示
+  // 1. 全体を完全モノクロ化（彩度ゼロ）
+  { featureType: "all", stylers: [{ saturation: -100 }] },
+  
+  // 2. ピンをすべて非表示
   { featureType: "all", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
   
-  // 2. 完全な無彩色（色味ゼロの極薄グレー）
-  { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#F2F2F2" }] }, // 陸地（極薄グレー）
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#E8E8E8" }] }, // 水域（陸地よりわずかに濃いグレー）
+  // 3. ベースカラー（建物の立体感を残すため、自然の陸地のみ色指定）
+  { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#F2F2F2" }] }, // 陸地（極薄グレー）
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#E8E8E8" }] }, // 水域（陸地より少し濃いグレー）
   { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#EAEAEA" }] }, // 公園（グレー）
   
-  // 3. 道を「純白」にして際立たせる
+  // ※ 建物の指定（landscape.man_made）はあえて行わず、Googleデフォルトの美しい立体感（影）をそのまま活かす
+  
+  // 4. 道を「純白」にして際立たせる
   { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#FFFFFF" }] },
   { featureType: "road", elementType: "geometry.stroke", stylers: [{ visibility: "off" }] },
   { featureType: "road.arterial", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#EBEBEB" }, { weight: 1 }] },
   { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#E0E0E0" }, { weight: 1.5 }] },
   
-  // 4. 文字
+  // 5. 文字
   { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#777777" }] },
   { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#FFFFFF" }, { weight: 3 }] },
   { featureType: "road.local", elementType: "labels", stylers: [{ visibility: "off" }] },
   
-  // 5. 線路非表示
+  // 6. 線路非表示
   { featureType: "transit.line", elementType: "geometry", stylers: [{ visibility: "off" }] }
 ];
 
