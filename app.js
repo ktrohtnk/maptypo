@@ -124,6 +124,9 @@ const MAP_STYLE_LIGHT = [
   // 1. 全体を完全モノクロ化（彩度ゼロ）
   { featureType: "all", stylers: [{ saturation: -100 }] },
   
+  // 2. お店などのPOI（Point of Interest）のラベル（アイコンと文字）をすべて非表示
+  { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
+  
   // 3. ベースカラー
   { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#F2F2F2" }] },
   { featureType: "water", elementType: "geometry", stylers: [{ color: "#E8E8E8" }] },
@@ -131,9 +134,9 @@ const MAP_STYLE_LIGHT = [
   
   // 4. 道を「純白」にしつつ、すべての道に「極薄グレーの縁取り」をつける
   { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#FFFFFF" }] },
-  { featureType: "road", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#E0E0E0" }, { weight: 0.5 }] }, // 細い道にも薄い枠線
-  { featureType: "road.arterial", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#D8D8D8" }, { weight: 1 }] }, // 幹線道路
-  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#D0D0D0" }, { weight: 1.5 }] }, // 高速道路
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#E0E0E0" }, { weight: 0.5 }] },
+  { featureType: "road.arterial", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#D8D8D8" }, { weight: 1 }] },
+  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#D0D0D0" }, { weight: 1.5 }] },
   
   // 5. 文字
   { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#777777" }] },
@@ -146,6 +149,7 @@ const MAP_STYLE_LIGHT = [
 
 const MAP_STYLE_DARK = [
   { featureType: "all", stylers: [{ saturation: -100 }] },
+  { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
   { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#222222" }] },
   { featureType: "transit.line", elementType: "geometry", stylers: [{ visibility: "off" }] },
   { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#888888" }] },
