@@ -204,10 +204,10 @@ async function startTrace() {
     .replace(/♥/g, '♡')
     .toUpperCase()
     .replace(/[^A-Z0-9\u30A0-\u30F6\u30FC\u30F3!?♡ \n]/g, '');
-  const letterSize = parseInt(document.getElementById('size-select').value);
-  const textColorHex = document.getElementById('color-picker').value;
-  const isRandomColor = document.getElementById('random-color-checkbox').checked;
-  const drawStyle = document.getElementById('style-select').value;
+  const letterSize = parseInt(document.getElementById('size-select')?.value || '500');
+  const textColorHex = document.getElementById('color-picker')?.value || '#111111';
+  const isRandomColor = document.getElementById('random-color-checkbox')?.checked || false;
+  const drawStyle = document.getElementById('style-select')?.value || 'normal';
 
   if (!address || !text) return alert('場所と文字を入力してください');
 
