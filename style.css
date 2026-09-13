@@ -163,12 +163,12 @@ body[data-theme="map-blue"] #map {
 .matrix-line {
   position: absolute;
   background-color: #FFFFFF; /* 背景は白 */
-  color: #111111;
+  color: #FF0000;
   font-family: 'Space Mono', monospace;
   font-size: 11px; /* 小さく精密なサイズ */
   line-height: 1;
   padding: 4px 6px; /* ギリギリの余白 */
-  border: 1px solid #111111; /* 無機質な極細ライン */
+  border: 1.5px solid #FF0000; /* 無機質な極細ライン */
   white-space: nowrap;
   font-weight: 700;
   letter-spacing: -0.5px; /* タイトカーニング */
@@ -198,7 +198,7 @@ body[data-theme="map-blue"] #map {
   left: -1px; /* border offset */
   width: 1px;
   height: 20px;
-  background-color: #111;
+  background-color: #FF0000;
 }
 #matrix-lon::before {
   content: '';
@@ -207,17 +207,19 @@ body[data-theme="map-blue"] #map {
   right: -1px; /* border offset */
   width: 1px;
   height: 20px;
-  background-color: #111;
+  background-color: #FF0000;
 }
 
 .matrix-line.resolved {
-  color: #E24F33; /* 測定完了時のアクセントカラー */
+  color: #FFFFFF; 
+  background-color: #FF0000;
+  border-color: #FF0000;
 }
 
 /* ダークテーマ対応：極力無機質に反転 */
 [data-theme="cyberpunk"] .matrix-line,
 [data-theme="monochrome"] .matrix-line {
-  background-color: #111111;
+  background-color: #FF0000;
   color: #FFFFFF;
   border-color: #555555;
 }
