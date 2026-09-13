@@ -299,6 +299,8 @@ function traceText(text, mapCenter, letterSizeMeters, allWays, connectLetters = 
 
   // --- NEW: Smart Map Center (Avoid Water/Empty areas) ---
   // If the geocoded center is on a river/sea, we pull it towards the center of mass of the actual road network.
+  // [FIX] Disabled because it drags coastal cities (like Moji) far inland towards adjacent cities.
+  /*
   let sumLat = 0, sumLon = 0, nodeCount = 0;
   nodes.forEach(n => { sumLat += n.lat; sumLon += n.lon; nodeCount++; });
   if (nodeCount > 0) {
@@ -310,6 +312,7 @@ function traceText(text, mapCenter, letterSizeMeters, allWays, connectLetters = 
       (mapCenter[1] + roadCenterLon) / 2
     ];
   }
+  */
 
   const rawText = text;
   const lines = rawText
