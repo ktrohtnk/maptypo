@@ -338,6 +338,10 @@ function traceText(text, mapCenter, letterSizeMeters, allWays, connectLetters = 
 
   let prevCharEnd = null;
   let prevCharBBox = null;
+  
+  let globalShiftLat = 0;
+  let globalShiftLon = 0;
+  let isFirstChar = true;
 
   for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
     const line = lines[lineIndex];
@@ -370,11 +374,41 @@ function traceText(text, mapCenter, letterSizeMeters, allWays, connectLetters = 
       
       const template = TEMPLATES[char] || TEMPLATES['O']; // Fallback
       
+      if (isFirstChar) {
+        // --- NEW: Global Magnetic Shift ---
+        // 最初の文字の中心に最も近い道路ノードを探し、そこに文字全体を引き寄せる。
+        // これにより最初のRの形状が綺麗にスナップし、かつ後続の文字のベースラインも揃う。
+        const idealCenterLat = baseLat + (letterH / 2);
+        const idealCenterLon = currentLon + (letterW / 2);
+        
+        let minDist = Infinity;
+        let nearestNode = null;
+        nodes.forEach(node => {
+          const dLat = node.lat - idealCenterLat;
+          const dLon = node.lon - idealCenterLon;
+          const distSq = dLat*dLat + dLon*dLon;
+          if (distSq < minDist) {
+            minDist = distSq;
+            nearestNode = node;
+          }
+        });
+        
+        if (nearestNode) {
+          const maxShiftLat = letterH * 0.50; // 最大50%までずらす
+          const maxShiftLon = letterW * 0.50;
+          let sLat = nearestNode.lat - idealCenterLat;
+          let sLon = nearestNode.lon - idealCenterLon;
+          globalShiftLat = Math.max(-maxShiftLat, Math.min(maxShiftLat, sLat));
+          globalShiftLon = Math.max(-maxShiftLon, Math.min(maxShiftLon, sLon));
+        }
+        isFirstChar = false;
+      }
+      
       const charBBox = {
-        minLat: baseLat,
-        maxLat: baseLat + letterH,
-        minLon: currentLon,
-        maxLon: currentLon + letterW
+        minLat: baseLat + globalShiftLat,
+        maxLat: baseLat + letterH + globalShiftLat,
+        minLon: currentLon + globalShiftLon,
+        maxLon: currentLon + letterW + globalShiftLon
       };
 
       const strokePaths = [];
