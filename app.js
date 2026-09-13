@@ -128,7 +128,7 @@ const MAP_STYLE_LIGHT = [
   // 3. お店などのPOIテキストを非表示
   { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
   
-  // 4. ベースカラー (少し暗く調整)
+  // 4. ベースカラー (起伏を完全に消し去ったフラットなソリッドカラー)
   { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#E0E0E0" }] },
   { featureType: "water", elementType: "geometry", stylers: [{ color: "#D0D0D0" }] },
   { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#D4D4D4" }] },
