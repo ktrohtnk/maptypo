@@ -216,13 +216,18 @@ async function startTrace() {
   if (!address || !text) return alert('場所と文字を入力してください');
 
   // キャッシュキーの作成（住所・文字・サイズ・色が同じならキャッシュを使う）
-  const cacheKey = `maptypo_cache_v11_${btoa(unescape(encodeURIComponent(address + text + letterSize + textColorHex + isRandomColor)))}`;
+  const cacheKey = `maptypo_cache_v12_${btoa(unescape(encodeURIComponent(address + text + letterSize + textColorHex + isRandomColor)))}`;
   const cached = localStorage.getItem(cacheKey);
 
   if (cached) {
     try {
       const { loc, zoom, traceResults } = JSON.parse(cached);
-      initMap(loc.lat, loc.lon, zoom);
+      
+      let cameraLat = loc.lat;
+      if (address === '福岡市 薬院' && text === 'ROAD\nTRACER') {
+        cameraLat = loc.lat - 0.0025;
+      }
+      initMap(cameraLat, loc.lon, zoom);
       setStatus('Trace loaded from cache...', 90);
       
       // ダウンロード用に保存
@@ -314,7 +319,12 @@ async function startTrace() {
     let zoom = 14;
     if (requiredSize > 3000) zoom = 13;
     if (requiredSize > 5000) zoom = 12;
-    initMap(loc.lat, loc.lon, zoom);
+    let cameraLat = loc.lat;
+    if (address === '福岡市 薬院' && text === 'ROAD\nTRACER') {
+      // カメラを南にずらして、文字（ROAD）が画面の「もっと上」に見えるようにする
+      cameraLat = loc.lat - 0.0025; 
+    }
+    initMap(cameraLat, loc.lon, zoom);
 
     if (!ways) {
       setStatus('Fetching road network...', 40);
