@@ -39,11 +39,11 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
 textarea { resize: vertical; min-height: 80px; }
 
 .primary-btn {
-  background: #FFFFFF; color: #A67C52; border: 2px solid #FFFFFF; padding: 16px;
+  background: #FFFFFF; color: #A67C52; border: 2px solid #A67C52; padding: 16px;
   border-radius: 999px; font-weight: 700; cursor: pointer; font-size: 0.95rem;
   transition: all 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px;
 }
-.primary-btn:hover { background: #F0E6D2; border-color: #F0E6D2; }
+.primary-btn:hover { background: #F0E6D2; border-color: #A67C52; }
 .primary-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .btn-row { display: flex; gap: 8px; }
