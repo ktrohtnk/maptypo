@@ -44,20 +44,21 @@ input:focus, select:focus, textarea:focus { background: #fff; border-color: var(
 textarea { resize: vertical; min-height: 80px; }
 
 .primary-btn {
-  background: var(--text); color: #fff; border: none; padding: 16px;
-  border-radius: 6px; font-weight: 500; cursor: pointer; font-size: 0.95rem;
+  background: transparent; color: var(--text); border: 1px solid var(--text); padding: 16px;
+  border-radius: 999px; font-weight: 500; cursor: pointer; font-size: 0.95rem;
   transition: all 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px;
 }
-.primary-btn:hover { background: var(--accent); }
+.primary-btn:hover { background: rgba(0,0,0,0.03); }
 .primary-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .btn-row { display: flex; gap: 8px; }
 .btn-row .primary-btn { flex: 1; }
 .secondary-btn {
   background: transparent; color: var(--text2); border: 1px solid var(--border);
-  padding: 16px 20px; border-radius: 6px; font-weight: 500; cursor: pointer; font-size: 0.95rem;
+  padding: 16px 20px; border-radius: 999px; font-weight: 500; cursor: pointer; font-size: 0.95rem;
   transition: all 0.2s;
 }
+.secondary-btn:hover { border-color: var(--text2); color: var(--text); }
 .secondary-btn:hover { border-color: var(--text); color: var(--text); }
 
 #status-bar { margin-top: auto; }
