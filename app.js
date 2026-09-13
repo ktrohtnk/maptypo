@@ -72,37 +72,26 @@ function setBtn(loading) {
 }
 
 async function geocode(address) {
-  return new Promise((resolve, reject) => {
-    if (!window.google || !window.google.maps || !window.google.maps.Geocoder) {
-      reject(new Error('Google Maps APIが読み込まれていません'));
-      return;
-    }
-    const geocoder = new google.maps.Geocoder();
-    geocoder.geocode({ address: address, region: 'jp' }, (results, status) => {
-      if (status === 'OK' && results && results.length > 0) {
-        resolve({
-          lat: results[0].geometry.location.lat(),
-          lon: results[0].geometry.location.lng()
-        });
-      } else {
-        // Fallback for strict addresses
-        if (address.includes('区')) {
-          const fallback = address.replace(/.*区/, '').trim();
-          if (fallback) {
-            geocoder.geocode({ address: fallback, region: 'jp' }, (r, s) => {
-              if (s === 'OK' && r && r.length > 0) {
-                resolve({ lat: r[0].geometry.location.lat(), lon: r[0].geometry.location.lng() });
-              } else {
-                reject(new Error('住所が見つかりません'));
-              }
-            });
-            return;
-          }
-        }
-        reject(new Error('住所が見つかりません（より広い地名をお試しください）'));
-      }
-    });
-  });
+  const fetchGeocode = async (q) => {
+    let url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`;
+    const res = await fetch(url, { headers: { 'User-Agent': 'RoadTracer/1.0' } });
+    return await res.json();
+  };
+
+  let data = await fetchGeocode(address);
+  
+  if ((!data || data.length === 0) && address.includes('区')) {
+    const fallback = address.replace(/.*区/, '').trim();
+    if (fallback) data = await fetchGeocode(fallback);
+  }
+  
+  if ((!data || data.length === 0) && address.includes('市') && !address.includes(' ')) {
+    const fallback2 = address.replace('市', '市 ');
+    data = await fetchGeocode(fallback2);
+  }
+
+  if (!data || !data.length) throw new Error('住所が見つかりません');
+  return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
 }
 
 
@@ -758,9 +747,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   detectUserLocation();
 
-  // Autocomplete using Google Places API (Blazing fast)
-  let autocompleteService;
-  
   locInput.addEventListener('input', (e) => {
     clearTimeout(debounceTimer);
     const val = e.target.value.trim();
@@ -770,24 +756,21 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     
-    debounceTimer = setTimeout(() => {
-      if (!window.google || !window.google.maps || !window.google.maps.places) return;
-      if (!autocompleteService) autocompleteService = new google.maps.places.AutocompleteService();
-      
-      const req = {
-        input: val,
-        types: ['(regions)'], // Only cities/regions, no businesses
-        componentRestrictions: { country: 'jp' }
-      };
-      
-      autocompleteService.getPlacePredictions(req, (predictions, status) => {
+    debounceTimer = setTimeout(async () => {
+      try {
+        let url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val)}&format=json&limit=5&featuretype=settlement`;
+        if (userViewbox) url += `&viewbox=${userViewbox}`;
+        
+        const res = await fetch(url, { headers: { 'User-Agent': 'RoadTracer/1.0' } });
+        const data = await res.json();
+        
         suggestionsList.innerHTML = '';
-        if (status === google.maps.places.PlacesServiceStatus.OK && predictions && predictions.length > 0) {
-          predictions.forEach(item => {
+        if (data.length > 0) {
+          data.forEach(item => {
             const li = document.createElement('li');
-            li.textContent = item.description;
+            li.textContent = item.display_name;
             li.addEventListener('click', () => {
-              locInput.value = item.description;
+              locInput.value = item.display_name;
               suggestionsList.classList.add('hidden');
             });
             suggestionsList.appendChild(li);
@@ -796,8 +779,10 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
           suggestionsList.classList.add('hidden');
         }
-      });
-    }, 150);
+      } catch (e) {
+        console.warn('Nominatim autocomplete error:', e);
+      }
+    }, 300);
   });
 
   // Hide suggestions when clicking outside
