@@ -10,9 +10,9 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); overflow: hidden; height: 100vh; -webkit-font-smoothing: antialiased; }
+body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); overflow: hidden; height: 100dvh; -webkit-font-smoothing: antialiased; }
 
-#app { display: flex; flex-direction: column; height: 100vh; }
+#app { display: flex; flex-direction: column; height: 100dvh; }
 
 #header {
   height: 60px; border-bottom: 1px solid var(--border); background: var(--panel);
@@ -26,7 +26,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 #main-layout { display: grid; grid-template-columns: 360px 1fr; flex: 1; overflow: hidden; }
 
 /* Left Sidebar */
-#sidebar-left { background: var(--panel); border-right: 1px solid var(--border); padding: 40px 30px; display: flex; flex-direction: column; gap: 30px; z-index: 1000; box-shadow: 2px 0 10px rgba(0,0,0,0.02); }
+#sidebar-left { background: var(--panel); border-right: 1px solid var(--border); padding: 40px 30px; display: flex; flex-direction: column; gap: 30px; z-index: 1000; box-shadow: 2px 0 10px rgba(0,0,0,0.02); overflow-y: auto; }
 .sidebar-header h1 { font-size: 1.3rem; font-weight: 500; margin-bottom: 8px; letter-spacing: -0.5px; }
 .search-desc { color: var(--text2); font-size: 0.85rem; line-height: 1.5; }
 
@@ -117,7 +117,7 @@ body[data-theme="map-blue"] #map {
   #sidebar-left {
     width: 100%;
     flex: none;
-    height: 45vh; /* 下部45%をコントロールパネルに */
+    height: 45dvh; /* 下部45%をコントロールパネルに */
     overflow-y: auto; /* スクロール可能に */
     padding: 24px 20px;
     border-right: none;
@@ -127,7 +127,7 @@ body[data-theme="map-blue"] #map {
 
   #map-area {
     flex: 1; /* 上部残りのスペースを地図に */
-    height: 55vh;
+    height: 55dvh;
   }
 
   #header {
