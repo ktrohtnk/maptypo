@@ -162,60 +162,61 @@ body[data-theme="map-blue"] #map {
 
 .matrix-line {
   position: absolute;
-  background: transparent;
+  z-index: 1000;
+  background-color: #FFFFFF;
   color: #FF0000;
-  font-family: 'Space Grotesk', monospace;
-  font-size: 1.1rem;
-  font-weight: 700;
-  padding: 8px 12px;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  line-height: 1;
+  padding: 4px 6px;
   border: none;
-  letter-spacing: 2px;
-  text-shadow: 0 0 5px rgba(255,0,0,0.3);
+  white-space: nowrap;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  text-transform: uppercase;
+  transition: color 0.2s, background-color 0.2s;
 }
 
 /* エッジに完全に寄せる */
 #matrix-lat {
-  top: 15px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 0;
+  left: 0;
 }
 #matrix-lon {
-  bottom: 15px;
-  right: 15px;
+  bottom: 0;
+  right: 0;
 }
 
 /* 測定線（クロスヘア）のアノテーション的装飾 */
 #matrix-lat::after {
   content: '';
   position: absolute;
-  bottom: -15px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 2px;
-  height: 15px;
+  bottom: -20px;
+  left: 0;
+  width: 1px;
+  height: 20px;
   background-color: #FF0000;
 }
 #matrix-lon::before {
   content: '';
   position: absolute;
-  top: -15px;
-  right: 20px;
-  width: 2px;
-  height: 15px;
+  top: -20px;
+  right: 0;
+  width: 1px;
+  height: 20px;
   background-color: #FF0000;
 }
 
 .matrix-line.resolved {
-  color: #FF0000;
-  text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+  color: #FFFFFF;
+  background-color: #FF0000;
 }
 
 /* ダークテーマ対応：極力無機質に反転 */
 [data-theme="cyberpunk"] .matrix-line,
 [data-theme="monochrome"] .matrix-line {
-  background-color: #FFFFFF;
-  color: #FFFFFF;
-  border-color: #555555;
+  background-color: #111111;
+  color: #FF0000;
 }
 [data-theme="cyberpunk"] #matrix-lat::after,
 [data-theme="cyberpunk"] #matrix-lon::before,
