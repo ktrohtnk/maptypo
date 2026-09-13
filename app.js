@@ -577,9 +577,9 @@ function clearTrace() {
   document.getElementById('status-bar').classList.add('hidden');
 }
 
-function downloadSVG() {
+function generateSVGString() {
   if (!lastTraceResults || lastTraceResults.length === 0) {
-    return alert('先にGenerateで文字を描画してください');
+    return null;
   }
 
   // 全座標からバウンディングボックスを計算
@@ -669,7 +669,14 @@ function downloadSVG() {
 ${pathsSvg}${creditSvg}
 </svg>`;
 
-  const blob = new Blob([svg], { type: 'image/svg+xml' });
+  return { svg, svgWidth, svgHeight: Math.round(svgHeight) };
+}
+
+function downloadSVG() {
+  const data = generateSVGString();
+  if (!data) return alert('先にGenerateで文字を描画してください');
+
+  const blob = new Blob([data.svg], { type: 'image/svg+xml' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -678,9 +685,40 @@ ${pathsSvg}${creditSvg}
   URL.revokeObjectURL(url);
 }
 
+function downloadJPG() {
+  const data = generateSVGString();
+  if (!data) return alert('先にGenerateで文字を描画してください');
+
+  const canvas = document.createElement('canvas');
+  // 高解像度（Retina）対応のため2倍サイズで描画
+  const scale = 2;
+  canvas.width = data.svgWidth * scale;
+  canvas.height = data.svgHeight * scale;
+  const ctx = canvas.getContext('2d');
+
+  const img = new Image();
+  const svgBlob = new Blob([data.svg], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(svgBlob);
+
+  img.onload = () => {
+    ctx.fillStyle = '#F5F5F0'; // fallback bgColor
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    
+    const jpgUrl = canvas.toDataURL('image/jpeg', 0.95);
+    const a = document.createElement('a');
+    a.href = jpgUrl;
+    a.download = 'road-tracer.jpg';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+  img.src = url;
+}
+
 window.startTrace = startTrace;
 window.clearTrace = clearTrace;
 window.downloadSVG = downloadSVG;
+window.downloadJPG = downloadJPG;
 
 // ----------------------------------------------------
 // Location Autocomplete Logic (IP Priority)

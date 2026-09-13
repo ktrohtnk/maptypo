@@ -65,7 +65,10 @@
             </button>
             <button id="clear-btn" class="secondary-btn" onclick="clearTrace()">Clear</button>
           </div>
-          <button id="dl-btn" class="secondary-btn" style="width:100%; margin-top:8px;" onclick="downloadSVG()">⬇ Download SVG</button>
+          <div class="btn-row" style="margin-top:8px;">
+            <button id="dl-svg-btn" class="secondary-btn" style="flex:1;" onclick="downloadSVG()">⬇ SVG</button>
+            <button id="dl-jpg-btn" class="secondary-btn" style="flex:1;" onclick="downloadJPG()">⬇ JPG</button>
+          </div>
         </div>
 
         <div id="status-bar" class="hidden">
