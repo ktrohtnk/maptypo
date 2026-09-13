@@ -339,7 +339,8 @@ function traceText(text, mapCenter, letterSizeMeters, allWays, connectLetters = 
   let prevCharEnd = null;
   let prevCharBBox = null;
 
-  for (const line of lines) {
+  for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+    const line = lines[lineIndex];
     // 改行時には繋がりをリセットする（筆記体のルール）
     prevCharEnd = null;
     prevCharBBox = null;
