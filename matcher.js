@@ -368,32 +368,11 @@ function traceText(text, mapCenter, letterSizeMeters, allWays, connectLetters = 
       
       const template = TEMPLATES[char] || TEMPLATES['O']; // Fallback
       
-      // --- NEW: Magnetic Smart Stagger ---
-      // ユーザーの要望に基づく「描ける場所を賢く選んでずらす」処理
-      // 文字の中心に最も近い実際の道路ノードを探し、そこに最大40%まで文字全体を引き寄せる（スナップする）
-      const idealCenterLat = baseLat + (letterH / 2);
-      const idealCenterLon = currentLon + (letterW / 2);
-      const nearestNode = findClosestNode(idealCenterLat, idealCenterLon, nodes);
-      
-      let shiftLat = 0;
-      let shiftLon = 0;
-      if (nearestNode) {
-        const maxShiftLat = letterH * 0.40; // 最大40%までずらすことを許可
-        const maxShiftLon = letterW * 0.40;
-        
-        shiftLat = nearestNode.lat - idealCenterLat;
-        shiftLon = nearestNode.lon - idealCenterLon;
-        
-        // Clamp (制限)
-        shiftLat = Math.max(-maxShiftLat, Math.min(maxShiftLat, shiftLat));
-        shiftLon = Math.max(-maxShiftLon, Math.min(maxShiftLon, shiftLon));
-      }
-      
       const charBBox = {
-        minLat: baseLat + shiftLat,
-        maxLat: baseLat + letterH + shiftLat,
-        minLon: currentLon + shiftLon,
-        maxLon: currentLon + letterW + shiftLon
+        minLat: baseLat,
+        maxLat: baseLat + letterH,
+        minLon: currentLon,
+        maxLon: currentLon + letterW
       };
 
       const strokePaths = [];
