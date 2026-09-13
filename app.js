@@ -642,7 +642,6 @@ function downloadSVG() {
   
   const creditSvg = `
   <g font-family="'Quicksand', sans-serif" font-weight="300" fill="${creditColor}" opacity="0.8">
-    <text x="${svgWidth - 20}" y="${Math.round(svgHeight) - 36}" font-size="12" text-anchor="end" letter-spacing="1">ROAD TRACER v6.2</text>
     <text x="${svgWidth - 20}" y="${Math.round(svgHeight) - 20}" font-size="10" text-anchor="end" letter-spacing="0.5">${lastAddressEn} / ${coordStr}</text>
   </g>`;
 
