@@ -355,6 +355,12 @@ function traceText(text, mapCenter, letterSizeMeters, allWays, connectLetters = 
     
     // Start from the left so this line is centered horizontally
     let currentLon = mapCenter[1] - (totalW / 2);
+    
+    // ユーザー要望：オープニングの最初のRが綺麗に描けるように、1行目を少し右にずらす
+    if (lineIndex === 0) {
+      currentLon += letterW * 0.4; // 40%右にシフト
+    }
+    
     const baseLat = currentLat - letterH; // Bottom edge of the current line
 
     for (const char of chars) {
