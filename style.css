@@ -20,14 +20,10 @@ body { font-family: 'Quicksand', -apple-system, sans-serif; background: var(--bg
   letter-spacing: -4px;
   color: var(--panel);
   text-shadow: 
-    -1.5px -1.5px 0 var(--text),
-     1.5px -1.5px 0 var(--text),
-    -1.5px  1.5px 0 var(--text),
-     1.5px  1.5px 0 var(--text),
-     0px   -1.5px 0 var(--text),
-     0px    1.5px 0 var(--text),
-    -1.5px  0px   0 var(--text),
-     1.5px  0px   0 var(--text);
+    -1px -1px 0 var(--text),
+     1px -1px 0 var(--text),
+    -1px  1px 0 var(--text),
+     1px  1px 0 var(--text);
   margin-bottom: 12px;
 }
 .version { font-size: 0.9rem; color: var(--text2); font-weight: 400; margin-left: 6px; text-shadow: none; vertical-align: middle; letter-spacing: normal; }
