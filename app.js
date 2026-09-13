@@ -121,43 +121,42 @@ async function fetchRoads(lat, lon, radiusM) {
 }
 
 const MAP_STYLE_LIGHT = [
-  { featureType: "all", stylers: [{ saturation: -100 }] }, // 完全モノクロ
-  { featureType: "all", elementType: "labels.icon", stylers: [{ visibility: "off" }] }, // ピンを非表示
+  // 1. ピンをすべて非表示（これでJRの赤色や高速の緑色も消えます）
+  { featureType: "all", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
   
-  // 背景全体を塗りつぶすと建物の立体感が死ぬため、自然の陸地のみを指定
-  { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#F0F0F0" }] },
+  // 2. ベースカラー（CartoDB Positronの完全再現）
+  { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#F3F4F5" }] }, // 陸地と建物を一体化させて平坦に
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#E3E3F3" }] }, // うっすらとした青
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#E1E9E0" }] }, // うっすらとした緑
   
-  // 邪魔な地下鉄・電車の線路を完全に非表示にする
-  { featureType: "transit.line", elementType: "geometry", stylers: [{ visibility: "off" }] },
-  
-  { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#777777" }] },
-  { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#F0F0F0" }, { weight: 2.5 }] },
+  // 3. 道を「純白」にして際立たせる
   { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#FFFFFF" }] },
   { featureType: "road", elementType: "geometry.stroke", stylers: [{ visibility: "off" }] },
-  { featureType: "road.arterial", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#D0D0D0" }, { weight: 1 }] },
-  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#B0B0B0" }, { weight: 1.5 }] },
+  { featureType: "road.arterial", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#F0F0F0" }, { weight: 1 }] },
+  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#EAEAEA" }, { weight: 1.5 }] },
+  
+  // 4. 文字（白フチを太くして読みやすく）
+  { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#777777" }] },
+  { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#FFFFFF" }, { weight: 3 }] },
   { featureType: "road.local", elementType: "labels", stylers: [{ visibility: "off" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#D8D8D8" }] }
+  
+  // 5. 邪魔な地下鉄・電車の線路を完全に非表示
+  { featureType: "transit.line", elementType: "geometry", stylers: [{ visibility: "off" }] }
 ];
 
 const MAP_STYLE_DARK = [
-  { featureType: "all", stylers: [{ saturation: -100 }] },
   { featureType: "all", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
-  
-  // ダークモードも自然の陸地のみを指定
-  { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#222222" }] },
-  
-  // 邪魔な地下鉄・電車の線路を完全に非表示にする
-  { featureType: "transit.line", elementType: "geometry", stylers: [{ visibility: "off" }] },
-  
-  { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#888888" }] },
-  { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#222222" }, { weight: 2.5 }] },
-  { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#111111" }] },
+  { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#222222" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#111111" }] },
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#1A1A1A" }] },
+  { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#333333" }] },
   { featureType: "road", elementType: "geometry.stroke", stylers: [{ visibility: "off" }] },
-  { featureType: "road.arterial", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#333333" }, { weight: 1 }] },
-  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#555555" }, { weight: 1.5 }] },
+  { featureType: "road.arterial", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#2A2A2A" }, { weight: 1 }] },
+  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#111111" }, { weight: 1.5 }] },
+  { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#888888" }] },
+  { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#222222" }, { weight: 3 }] },
   { featureType: "road.local", elementType: "labels", stylers: [{ visibility: "off" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#1A1A1A" }] }
+  { featureType: "transit.line", elementType: "geometry", stylers: [{ visibility: "off" }] }
 ];
 
 function initMap(lat, lon, zoom, theme) {
