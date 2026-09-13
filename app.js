@@ -402,11 +402,11 @@ async function animateDrawing(traceResults, theme, animationId) {
 
       if (validPath.length < 2) continue;
 
-      // Draw background shadow
+      // Draw background shadow (slightly thicker as requested)
       const shadow = new google.maps.Polyline({
         path: validPath.map(pt => new google.maps.LatLng(pt.lat, pt.lng)),
         strokeColor: shadowColor,
-        strokeWeight: 10,
+        strokeWeight: 14,
         strokeOpacity: shadowOpacity,
         geodesic: false,
         zIndex: 1,
