@@ -141,6 +141,7 @@ const MAP_STYLE_LIGHT = [
   // 5. 文字（指定の美しいブルーグレー）
   { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#b4bcbf" }] },
   { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#FFFFFF" }, { weight: 3 }] }, // 白フチ
+  { featureType: "road", elementType: "labels.icon", stylers: [{ visibility: "off" }] }, // 「〜号線」などの標識アイコンを消去
   { featureType: "road.local", elementType: "labels", stylers: [{ visibility: "off" }] },
   
   // 6. 線路非表示
@@ -160,6 +161,7 @@ const MAP_STYLE_DARK = [
   { featureType: "road", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#1A1A1A" }, { weight: 1 }] },
   { featureType: "road.arterial", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#282828" }, { weight: 1 }] },
   { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#333333" }, { weight: 1.5 }] },
+  { featureType: "road", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
   { featureType: "road.local", elementType: "labels", stylers: [{ visibility: "off" }] }
 ];
 
