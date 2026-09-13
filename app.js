@@ -121,22 +121,28 @@ async function fetchRoads(lat, lon, radiusM) {
 }
 
 const MAP_STYLE_LIGHT = [
-  { featureType: "all", stylers: [{ saturation: -100 }] }, // すべての彩度をゼロ（完全モノクロ）にして赤や緑を無効化
+  { featureType: "all", stylers: [{ saturation: -100 }] }, // 完全モノクロ
   { featureType: "all", elementType: "geometry", stylers: [{ color: "#F5F5F5" }] },
+  { featureType: "landscape.man_made", elementType: "geometry", stylers: [{ color: "#EBEBEB" }] }, // 建物を少し濃くして復活
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#EAEAEA" }] }, // 公園もうっすら表示
   { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#777777" }] },
   { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#F5F5F5" }, { weight: 2.5 }] },
   { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#FFFFFF" }] },
   { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#E0E0E0" }, { weight: 0.5 }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#E5E5E5" }] }
+  { featureType: "road.local", elementType: "labels", stylers: [{ visibility: "off" }] }, // 「〇〇号線」などの細い道の名前を非表示
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#E0E0E0" }] }
 ];
 
 const MAP_STYLE_DARK = [
   { featureType: "all", stylers: [{ saturation: -100 }] },
   { featureType: "all", elementType: "geometry", stylers: [{ color: "#1D1D1F" }] },
+  { featureType: "landscape.man_made", elementType: "geometry", stylers: [{ color: "#262628" }] }, // 建物を少し明るくして復活
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#222224" }] },
   { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#888888" }] },
   { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#1D1D1F" }, { weight: 2.5 }] },
   { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#2B2B2D" }] },
   { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#111111" }, { weight: 0.5 }] },
+  { featureType: "road.local", elementType: "labels", stylers: [{ visibility: "off" }] }, // 「〇〇号線」などの細い道の名前を非表示
   { featureType: "water", elementType: "geometry", stylers: [{ color: "#111111" }] }
 ];
 
