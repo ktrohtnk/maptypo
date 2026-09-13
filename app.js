@@ -124,9 +124,6 @@ const MAP_STYLE_LIGHT = [
   // 1. 全体を完全モノクロ化（彩度ゼロ）
   { featureType: "all", stylers: [{ saturation: -100 }] },
   
-  // 2. ピンをすべて非表示
-  { featureType: "all", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
-  
   // 3. ベースカラー
   { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#F2F2F2" }] },
   { featureType: "water", elementType: "geometry", stylers: [{ color: "#E8E8E8" }] },
@@ -149,7 +146,6 @@ const MAP_STYLE_LIGHT = [
 
 const MAP_STYLE_DARK = [
   { featureType: "all", stylers: [{ saturation: -100 }] },
-  { featureType: "all", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
   { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#222222" }] },
   { featureType: "transit.line", elementType: "geometry", stylers: [{ visibility: "off" }] },
   { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#888888" }] },
