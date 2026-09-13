@@ -127,7 +127,8 @@ const MAP_STYLE_LIGHT = [
   // 背景全体を塗りつぶすと建物の立体感が死ぬため、自然の陸地のみを指定
   { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#F0F0F0" }] },
   
-  // 建物の指定はあえて行わず、Googleデフォルトの美しい立体感（影）をそのまま活かす
+  // 邪魔な地下鉄・電車の線路を完全に非表示にする
+  { featureType: "transit.line", elementType: "geometry", stylers: [{ visibility: "off" }] },
   
   { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#777777" }] },
   { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#F0F0F0" }, { weight: 2.5 }] },
@@ -145,6 +146,9 @@ const MAP_STYLE_DARK = [
   
   // ダークモードも自然の陸地のみを指定
   { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#222222" }] },
+  
+  // 邪魔な地下鉄・電車の線路を完全に非表示にする
+  { featureType: "transit.line", elementType: "geometry", stylers: [{ visibility: "off" }] },
   
   { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#888888" }] },
   { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#222222" }, { weight: 2.5 }] },
