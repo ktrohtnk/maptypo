@@ -43,6 +43,8 @@ input, select, textarea {
 }
 input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
 
+input[type="checkbox"] { width: auto; accent-color: var(--braille-yellow); transform: scale(1.2); }
+
 textarea { resize: vertical; min-height: 80px; }
 
 .primary-btn {
@@ -56,11 +58,11 @@ textarea { resize: vertical; min-height: 80px; }
 .btn-row { display: flex; gap: 8px; }
 .btn-row .primary-btn { flex: 1; }
 .secondary-btn {
-  background: transparent; color: var(--braille-yellow); border: 2px solid var(--braille-yellow);
+  background: transparent; color: var(--text); border: 2px solid var(--text);
   padding: 16px 20px; border-radius: 999px; font-weight: 700; cursor: pointer; font-size: 1rem;
   transition: all 0.2s;
 }
-.secondary-btn:hover { background: rgba(255, 215, 0, 0.1); color: var(--braille-yellow); }
+.secondary-btn:hover { background: rgba(232, 220, 196, 0.1); color: var(--text); }
 
 #status-bar { margin-top: auto; }
 #status-text { font-size: 0.8rem; color: var(--text2); text-align: center; margin-bottom: 10px; }
@@ -70,6 +72,13 @@ textarea { resize: vertical; min-height: 80px; }
 /* Map Area */
 #map-area { position: relative; background: #e5e5e5; }
 #map { height: 100%; width: 100%; background: transparent; }
+
+/* Desktop Tweaks */
+@media screen and (min-width: 769px) {
+  .primary-btn {
+    padding: 14px;
+  }
+}
 
 /* Google Maps Solid Themes Support */
 body[data-theme="minimal-blue"] #map,
@@ -164,19 +173,15 @@ body[data-theme="map-blue"] #map {
 
 .matrix-line {
   position: absolute;
-  z-index: 1000;
-  background-color: #FFFFFF;
-  color: #FF0000;
   font-family: 'Space Mono', monospace;
-  font-size: 11px;
-  line-height: 1;
-  padding: 4px 6px;
-  border: none;
-  white-space: nowrap;
+  font-size: 0.85rem;
   font-weight: 700;
-  letter-spacing: -0.5px;
-  text-transform: uppercase;
-  transition: color 0.2s, background-color 0.2s;
+  color: var(--traffic-orange);
+  letter-spacing: 1px;
+  background-color: #FFFFFF;
+  padding: 4px 8px;
+  transition: all 0.3s ease;
+  white-space: nowrap;
 }
 
 /* エッジに完全に寄せる */
@@ -191,14 +196,14 @@ body[data-theme="map-blue"] #map {
 
 .matrix-line.resolved {
   color: #FFFFFF;
-  background-color: #FF0000;
+  background-color: var(--traffic-orange);
 }
 
 /* ダークテーマ対応：極力無機質に反転 */
 [data-theme="cyberpunk"] .matrix-line,
 [data-theme="monochrome"] .matrix-line {
   background-color: #111111;
-  color: #FF0000;
+  color: var(--traffic-orange);
 }
 [data-theme="cyberpunk"] .matrix-line.resolved {
   color: #01ffc3;
