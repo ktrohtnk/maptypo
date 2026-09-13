@@ -13,10 +13,10 @@ let lastAddressEn = "";
 let currentAnimationId = 0;
 
 const OVERPASS_ENDPOINTS = [
-  'https://overpass-api.de/api/interpreter',
-  'https://lz4.overpass-api.de/api/interpreter',
-  'https://z.overpass-api.de/api/interpreter',
-  'https://maps.mail.ru/osm/tools/overpass/api/interpreter'
+  'https://overpass.kumi.systems/api/interpreter', // Fastest for Asia/Japan
+  'https://overpass.openstreetmap.ru/api/interpreter', // Very fast alternative
+  'https://lz4.overpass-api.de/api/interpreter', // Official compressed
+  'https://overpass-api.de/api/interpreter'
 ];
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -104,25 +104,30 @@ async function fetchRoads(lat, lon, radiusM) {
   const highwayTypes = "^(motorway|trunk|primary|secondary|tertiary|residential|unclassified|pedestrian|footway|path)$";
 
   const dLat = safeRadius / 111320, dLon = safeRadius / (111320 * Math.cos(lat * Math.PI / 180));
-  const query = `[out:json][timeout:25];way["highway"~"${highwayTypes}"](${lat-dLat},${lon-dLon},${lat+dLat},${lon+dLon});out geom;`;
+  const query = `[out:json][timeout:15];way["highway"~"${highwayTypes}"](${lat-dLat},${lon-dLon},${lat+dLat},${lon+dLon});out geom;`;
   
-  // 複数のサーバーを順番に試し、IP制限やサーバーダウンを回避する
-  for (const url of OVERPASS_ENDPOINTS) {
-    try {
-      const res = await fetch(url, { method: 'POST', body: 'data=' + encodeURIComponent(query) });
-      if (!res.ok) {
-        console.warn(`Server ${url} returned ${res.status}`);
-        continue; // エラーの場合は次のサーバーへ
-      }
+  // 最速でデータを取得するため、上位3つの高速サーバーに同時リクエストを送り、最初に応答したものを採用する（レーシング方式）
+  const controller = new AbortController();
+  try {
+    const promises = OVERPASS_ENDPOINTS.slice(0, 3).map(async (url) => {
+      const res = await fetch(url, { 
+        method: 'POST', 
+        body: 'data=' + encodeURIComponent(query),
+        signal: controller.signal
+      });
+      if (!res.ok) throw new Error(`Status ${res.status}`);
       const json = await res.json();
-      return (json.elements || []).map(el => (el.geometry || []).map(p => [p.lat, p.lon])).filter(w => w.length >= 2);
-    } catch (e) {
-      console.warn(`Server ${url} failed to parse JSON:`, e);
-      // 次のサーバーへ
-    }
-  }
+      if (!json.elements) throw new Error('Empty');
+      return json.elements.map(el => (el.geometry || []).map(p => [p.lat, p.lon])).filter(w => w.length >= 2);
+    });
 
-  throw new Error('現在、世界の地図サーバー全体が大変混雑しており、データが取得できませんでした。3〜5分ほどお待ちいただいてから再度お試しください。');
+    // 最初に成功した通信結果を受け取る
+    const result = await Promise.any(promises);
+    controller.abort(); // 負けた他のサーバーへの通信は即座にキャンセルして負荷を下げる
+    return result;
+  } catch (e) {
+    throw new Error('現在、世界の地図サーバー全体が大変混雑しており、データが取得できませんでした。少し時間をおいて再度お試しください。');
+  }
 }
 
 const MAP_STYLE_LIGHT = [
