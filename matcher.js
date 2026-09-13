@@ -357,15 +357,14 @@ function traceText(text, mapCenter, letterSizeMeters, allWays, connectLetters = 
     // Start from the left so this line is centered horizontally
     let currentLon = mapCenter[1] - (totalW / 2);
     
+    // 通常の複数行計算でのY座標
+    let baseLat = currentLat - letterH;
+    
     // --- SPECIAL REQUEST ---
-    // ユーザー要望: 1行目（ROAD）の座標計算を、複数行対応前の「単一行」だった頃（一昨日）と
-    // 全く同じになるように強制する。これによりRが完璧な位置の交差点からスタートする。
-    let baseLat;
+    // 1行目（ROAD）だけ、一昨日の単一行だった頃の座標に強制上書きする。
+    // 2行目以降は通常の複数行計算（currentLatベース）のままにするため、TRACERの座標はズレない。
     if (lineIndex === 0) {
-      baseLat = mapCenter[0] - (letterH / 2); // 一昨日の単一行時の座標（ど真ん中）
-    } else {
-      // 2行目以降は、1行目の下にくっつける
-      baseLat = (mapCenter[0] - (letterH / 2)) - (lineIndex * (letterH + gapH));
+      baseLat = mapCenter[0] - (letterH / 2);
     }
 
     for (const char of chars) {
