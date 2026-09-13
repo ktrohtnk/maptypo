@@ -138,9 +138,9 @@ const MAP_STYLE_LIGHT = [
   { featureType: "road.arterial", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#D8D8D8" }, { weight: 1 }] },
   { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#D0D0D0" }, { weight: 1.5 }] },
   
-  // 5. 文字
-  { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#777777" }] }, // 文字色はグレーに戻す
-  { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#fafaf8" }, { weight: 3 }] }, // 白い縁（指定のオフホワイト）を復活
+  // 5. 文字（指定の美しいブルーグレー）
+  { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#b4bcbf" }] },
+  { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#FFFFFF" }, { weight: 3 }] }, // 白フチ
   { featureType: "road.local", elementType: "labels", stylers: [{ visibility: "off" }] },
   
   // 6. 線路非表示
