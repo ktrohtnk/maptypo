@@ -15,16 +15,9 @@ body { font-family: 'Quicksand', -apple-system, sans-serif; background: var(--bg
 #app { display: flex; flex-direction: column; width: 100vw; height: 100vh; height: 100dvh; position: absolute; inset: 0; }
 
 .logo-text {
-  font-weight: 700;
-  font-size: 2.2rem;
-  letter-spacing: -8px;
-  word-spacing: 16px;
-  color: var(--panel);
-  text-shadow: 
-    -1px -1px 0 var(--text),
-     1px -1px 0 var(--text),
-    -1px  1px 0 var(--text),
-     1px  1px 0 var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-bottom: 12px;
 }
 .version { font-size: 0.9rem; color: var(--text2); font-weight: 400; margin-left: 6px; text-shadow: none; vertical-align: middle; letter-spacing: normal; }
