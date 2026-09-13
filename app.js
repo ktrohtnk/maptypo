@@ -122,28 +122,32 @@ async function fetchRoads(lat, lon, radiusM) {
 
 const MAP_STYLE_LIGHT = [
   { featureType: "all", stylers: [{ saturation: -100 }] }, // 完全モノクロ
-  { featureType: "all", elementType: "geometry", stylers: [{ color: "#F5F5F5" }] },
-  { featureType: "landscape.man_made", elementType: "geometry", stylers: [{ color: "#EBEBEB" }] }, // 建物を少し濃くして復活
-  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#EAEAEA" }] }, // 公園もうっすら表示
+  { featureType: "all", elementType: "geometry", stylers: [{ color: "#EDEDED" }] }, // 背景を少し濃くして道を際立たせる
+  { featureType: "landscape.man_made", elementType: "geometry", stylers: [{ color: "#E4E4E4" }] }, // 建物
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#E2E2E2" }] }, // 公園
   { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#777777" }] },
-  { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#F5F5F5" }, { weight: 2.5 }] },
-  { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#FFFFFF" }] },
-  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#E0E0E0" }, { weight: 0.5 }] },
+  { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#EDEDED" }, { weight: 2.5 }] },
+  { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#FFFFFF" }] }, // 道を真っ白に
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ visibility: "off" }] }, // 細い道の枠線を消してスッキリさせる
+  { featureType: "road.arterial", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#D0D0D0" }, { weight: 1 }] }, // 幹線道路の枠線
+  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#B0B0B0" }, { weight: 1.5 }] }, // 高速道路の枠線
   { featureType: "road.local", elementType: "labels", stylers: [{ visibility: "off" }] }, // 「〇〇号線」などの細い道の名前を非表示
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#E0E0E0" }] }
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#D8D8D8" }] }
 ];
 
 const MAP_STYLE_DARK = [
   { featureType: "all", stylers: [{ saturation: -100 }] },
-  { featureType: "all", elementType: "geometry", stylers: [{ color: "#1D1D1F" }] },
-  { featureType: "landscape.man_made", elementType: "geometry", stylers: [{ color: "#262628" }] }, // 建物を少し明るくして復活
-  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#222224" }] },
+  { featureType: "all", elementType: "geometry", stylers: [{ color: "#222222" }] },
+  { featureType: "landscape.man_made", elementType: "geometry", stylers: [{ color: "#2A2A2A" }] },
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#1E1E1E" }] },
   { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#888888" }] },
-  { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#1D1D1F" }, { weight: 2.5 }] },
-  { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#2B2B2D" }] },
-  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#111111" }, { weight: 0.5 }] },
-  { featureType: "road.local", elementType: "labels", stylers: [{ visibility: "off" }] }, // 「〇〇号線」などの細い道の名前を非表示
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#111111" }] }
+  { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#222222" }, { weight: 2.5 }] },
+  { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#111111" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ visibility: "off" }] },
+  { featureType: "road.arterial", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#333333" }, { weight: 1 }] },
+  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#555555" }, { weight: 1.5 }] },
+  { featureType: "road.local", elementType: "labels", stylers: [{ visibility: "off" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#1A1A1A" }] }
 ];
 
 function initMap(lat, lon, zoom, theme) {
