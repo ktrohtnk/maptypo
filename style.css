@@ -162,13 +162,13 @@ body[data-theme="map-blue"] #map {
 
 .matrix-line {
   position: absolute;
-  background-color: #FFFFFF; /* 背景は白 */
-  color: #FF0000;
+  background: rgba(255, 0, 0, 0.85); /* RGBA指定の赤（透過） */
+  color: #FFFFFF;
   font-family: 'Space Mono', monospace;
   font-size: 11px; /* 小さく精密なサイズ */
   line-height: 1;
   padding: 4px 6px; /* ギリギリの余白 */
-  border: 1.5px solid #FF0000; /* 無機質な極細ライン */
+  border: none;
   white-space: nowrap;
   font-weight: 700;
   letter-spacing: -0.5px; /* タイトカーニング */
@@ -195,31 +195,31 @@ body[data-theme="map-blue"] #map {
   content: '';
   position: absolute;
   bottom: -20px;
-  left: -1px; /* border offset */
-  width: 1px;
+  left: 0;
+  width: 2px;
   height: 20px;
-  background-color: #FF0000;
+  background-color: #FFFFFF;
 }
 #matrix-lon::before {
   content: '';
   position: absolute;
   top: -20px;
-  right: -1px; /* border offset */
-  width: 1px;
+  right: 0;
+  width: 2px;
   height: 20px;
-  background-color: #FF0000;
+  background-color: #FFFFFF;
 }
 
 .matrix-line.resolved {
   color: #FFFFFF; 
-  background-color: #FF0000;
-  border-color: #FF0000;
+  background-color: #FFFFFF;
+  
 }
 
 /* ダークテーマ対応：極力無機質に反転 */
 [data-theme="cyberpunk"] .matrix-line,
 [data-theme="monochrome"] .matrix-line {
-  background-color: #FF0000;
+  background-color: #FFFFFF;
   color: #FFFFFF;
   border-color: #555555;
 }
