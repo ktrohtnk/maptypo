@@ -121,26 +121,26 @@ async function fetchRoads(lat, lon, radiusM) {
 }
 
 const MAP_STYLE_LIGHT = [
-  // 1. ピンをすべて非表示（これでJRの赤色や高速の緑色も消えます）
+  // 1. ピンをすべて非表示
   { featureType: "all", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
   
-  // 2. ベースカラー（CartoDB Positronの完全再現）
-  { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#F3F4F5" }] }, // 陸地と建物を一体化させて平坦に
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#E3E3F3" }] }, // うっすらとした青
-  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#E1E9E0" }] }, // うっすらとした緑
+  // 2. 完全な無彩色（色味ゼロの極薄グレー）
+  { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#F2F2F2" }] }, // 陸地（極薄グレー）
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#E8E8E8" }] }, // 水域（陸地よりわずかに濃いグレー）
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#EAEAEA" }] }, // 公園（グレー）
   
   // 3. 道を「純白」にして際立たせる
   { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#FFFFFF" }] },
   { featureType: "road", elementType: "geometry.stroke", stylers: [{ visibility: "off" }] },
-  { featureType: "road.arterial", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#F0F0F0" }, { weight: 1 }] },
-  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#EAEAEA" }, { weight: 1.5 }] },
+  { featureType: "road.arterial", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#EBEBEB" }, { weight: 1 }] },
+  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#E0E0E0" }, { weight: 1.5 }] },
   
-  // 4. 文字（白フチを太くして読みやすく）
+  // 4. 文字
   { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#777777" }] },
   { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#FFFFFF" }, { weight: 3 }] },
   { featureType: "road.local", elementType: "labels", stylers: [{ visibility: "off" }] },
   
-  // 5. 邪魔な地下鉄・電車の線路を完全に非表示
+  // 5. 線路非表示
   { featureType: "transit.line", elementType: "geometry", stylers: [{ visibility: "off" }] }
 ];
 
