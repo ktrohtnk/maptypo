@@ -110,8 +110,8 @@ async function fetchRoads(lat, lon, radiusM) {
   // Overpass APIの安定性とデータ精度のバランスを取るため、最大半径を3500m（7km四方）に設定
   const safeRadius = Math.min(radiusM, 3500);
   
-  // 精度低下を防ぎつつ、公園内の歩道(footway)や小道(path)は含める。ただし、細かすぎる路地(service)は重くなるので除外。
-  const highwayTypes = "^(motorway|trunk|primary|secondary|tertiary|residential|unclassified|pedestrian|footway|path)$";
+  // 文字の生成精度（解像度）を最大限に高めるため、細かな路地(service, living_street, track)や歩道もすべて取得する
+  const highwayTypes = "^(motorway|trunk|primary|secondary|tertiary|residential|unclassified|pedestrian|footway|path|service|living_street|track)$";
 
   const dLat = safeRadius / 111320, dLon = safeRadius / (111320 * Math.cos(lat * Math.PI / 180));
   const query = `[out:json][timeout:15];way["highway"~"${highwayTypes}"](${lat-dLat},${lon-dLon},${lat+dLat},${lon+dLon});out geom;`;
@@ -231,7 +231,7 @@ async function startTrace() {
   if (!address || !text) return alert('場所と文字を入力してください');
 
   // キャッシュキーの作成（住所・文字・サイズ・色が同じならキャッシュを使う）
-  const cacheKey = `maptypo_cache_v13_${btoa(unescape(encodeURIComponent(address + text + letterSize + textColorHex + isRandomColor)))}`;
+  const cacheKey = `maptypo_cache_v14_${btoa(unescape(encodeURIComponent(address + text + letterSize + textColorHex + isRandomColor)))}`;
   const cached = localStorage.getItem(cacheKey);
 
   if (cached) {
@@ -289,22 +289,7 @@ async function startTrace() {
     setStatus('Searching location...', 10);
     
     let loc, ways;
-    // デフォルトの薬院の初期表示はAPIを使わず超軽量・高速に読み込む
-    if (address === '福岡市 薬院' && text === 'ROAD\nTRACER') {
-      setStatus('Loading ultra-lightweight map data...', 20);
-      try {
-        const res = await fetch('fukuoka_yakuin_optimized.json');
-        if (!res.ok) throw new Error('File not found');
-        const data = await res.json();
-        loc = data.loc;
-        ways = data.ways;
-      } catch (e) {
-        console.warn('Local data not found, falling back to API', e);
-        loc = await geocode(address);
-      }
-    } else {
-      loc = await geocode(address);
-    }
+    loc = await geocode(address);
     
     // キャンバス（地図データ）の取得範囲の安全上限
     const MAX_RADIUS = 3500; 
