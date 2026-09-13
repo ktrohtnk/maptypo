@@ -7,6 +7,8 @@
   --text2: #B0A692; /* Dimmer soil color */
   --border: #444444; /* Dark gray border */
   --accent: #D2A679; /* Soil accent color */
+  --braille-yellow: #FFD700; /* 点字ブロックの黄色 */
+  --traffic-orange: #F15A22; /* 交通系（中央線など）の濃いオレンジ */
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -33,7 +35,7 @@ body { font-family: 'Quicksand', -apple-system, sans-serif; background: var(--bg
 
 .search-card { display: flex; flex-direction: column; gap: 24px; }
 .filter-group { display: flex; flex-direction: column; gap: 8px; }
-.filter-label { font-size: 0.75rem; font-weight: 700; color: var(--accent); letter-spacing: 0.5px; text-transform: uppercase; }
+.filter-label { font-size: 0.75rem; font-weight: 700; color: var(--braille-yellow); letter-spacing: 0.5px; text-transform: uppercase; }
 
 input, select, textarea {
   width: 100%; background: var(--bg); border: 1px solid transparent;
