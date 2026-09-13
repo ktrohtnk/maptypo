@@ -607,25 +607,28 @@ document.addEventListener('DOMContentLoaded', () => {
   const locInput = document.getElementById('address-input');
   const suggestionsList = document.getElementById('location-suggestions');
   let debounceTimer;
-  let userCountryCode = '';
+  let userViewbox = '';
 
   if (!locInput || !suggestionsList) return;
 
-  // 1. IPアドレスからユーザーの国を特定（失敗してもアプリは壊れない）
-  async function detectUserCountry() {
+  // 1. IPアドレスからユーザーの現在地（緯度経度）を取得し、検索の「優先エリア（ソフトバイアス）」として使う
+  async function detectUserLocation() {
     try {
       const res = await fetch('https://ipapi.co/json/');
       if (!res.ok) return;
       const data = await res.json();
-      if (data.country_code) {
-        userCountryCode = data.country_code.toLowerCase();
-        console.log('Detected user country for search priority:', userCountryCode);
+      if (data.latitude && data.longitude) {
+        const lat = data.latitude;
+        const lon = data.longitude;
+        // ユーザーの現在地周辺（約100km〜数百km四方）を優先エリアに設定
+        userViewbox = `${lon - 2},${lat + 2},${lon + 2},${lat - 2}`;
+        console.log('Set search priority viewbox based on IP:', userViewbox);
       }
     } catch (e) {
-      console.warn('IP country detection blocked (e.g. ad blocker). Falling back to global search.');
+      console.warn('IP location detection blocked. Falling back to pure global search.');
     }
   }
-  detectUserCountry();
+  detectUserLocation();
 
   locInput.addEventListener('input', (e) => {
     clearTimeout(debounceTimer);
@@ -639,9 +642,9 @@ document.addEventListener('DOMContentLoaded', () => {
     debounceTimer = setTimeout(async () => {
       try {
         let url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val)}&format=json&limit=5`;
-        // 2. もしIPから国が判定できていれば、その国を優先して検索
-        if (userCountryCode) {
-          url += `&countrycodes=${userCountryCode}`;
+        // 2. IPから現在地が判定できていれば、その周辺を「優先的に」検索（※除外はしない）
+        if (userViewbox) {
+          url += `&viewbox=${userViewbox}`;
         }
         
         const res = await fetch(url, { headers: { 'User-Agent': 'RoadTracer/1.0' } });
