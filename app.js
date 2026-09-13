@@ -47,8 +47,13 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   // 初期表示のデモアニメーション
-  // 事前生成された軽量データを読み込むため、API負荷なしで爆速で完了します
-  setTimeout(() => startTrace(), 100);
+  // Google Maps APIが非同期で読み込まれるのを確実に待つ
+  const waitForGoogle = setInterval(() => {
+    if (window.google && window.google.maps && window.google.maps.Map) {
+      clearInterval(waitForGoogle);
+      startTrace();
+    }
+  }, 100);
 });
 
 
