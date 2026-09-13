@@ -286,7 +286,7 @@ async function startTrace() {
         const res = await fetch('fukuoka_yakuin_optimized.json');
         if (!res.ok) throw new Error('File not found');
         const data = await res.json();
-        loc = data.loc;
+        loc = { lat: 33.5816399, lon: 130.3985655 }; // Nominatimの正確な座標に固定して美しい配置を維持
         ways = data.ways;
       } catch (e) {
         console.warn('Local data not found, falling back to API', e);
