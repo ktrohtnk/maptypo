@@ -433,7 +433,7 @@ async function animateDrawing(traceResults, textColorHex, isRandomColor, animati
         path: [new google.maps.LatLng(validPath[0].lat, validPath[0].lng)], // Start with the first point
         strokeColor: color,
         strokeWeight: 6,
-        strokeOpacity: 0.9,
+        strokeOpacity: 1.0,
         geodesic: false,
         zIndex: 2,
         map: map
