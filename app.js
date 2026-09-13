@@ -184,9 +184,6 @@ function initMap(lat, lon, zoom) {
     map.setZoom(zoom);
     map.setOptions({ styles: currentStyle }); // テーマ変更時に地図の色も変える
   }
-
-  // data-theme属性をbodyに当ててCSSレベルでテーマを制御
-  document.body.setAttribute('data-theme', theme);
 }
 
 function clearMap() {
