@@ -127,18 +127,16 @@ const MAP_STYLE_LIGHT = [
   // 2. ピンをすべて非表示
   { featureType: "all", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
   
-  // 3. ベースカラー（建物の立体感を残すため、自然の陸地のみ色指定）
-  { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#F2F2F2" }] }, // 陸地（極薄グレー）
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#E8E8E8" }] }, // 水域（陸地より少し濃いグレー）
-  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#EAEAEA" }] }, // 公園（グレー）
+  // 3. ベースカラー
+  { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#F2F2F2" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#E8E8E8" }] },
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#EAEAEA" }] },
   
-  // ※ 建物の指定（landscape.man_made）はあえて行わず、Googleデフォルトの美しい立体感（影）をそのまま活かす
-  
-  // 4. 道を「純白」にして際立たせる
+  // 4. 道を「純白」にしつつ、すべての道に「極薄グレーの縁取り」をつける
   { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#FFFFFF" }] },
-  { featureType: "road", elementType: "geometry.stroke", stylers: [{ visibility: "off" }] },
-  { featureType: "road.arterial", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#EBEBEB" }, { weight: 1 }] },
-  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#E0E0E0" }, { weight: 1.5 }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#E0E0E0" }, { weight: 0.5 }] }, // 細い道にも薄い枠線
+  { featureType: "road.arterial", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#D8D8D8" }, { weight: 1 }] }, // 幹線道路
+  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#D0D0D0" }, { weight: 1.5 }] }, // 高速道路
   
   // 5. 文字
   { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#777777" }] },
@@ -150,18 +148,19 @@ const MAP_STYLE_LIGHT = [
 ];
 
 const MAP_STYLE_DARK = [
+  { featureType: "all", stylers: [{ saturation: -100 }] },
   { featureType: "all", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
-  { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#222222" }] },
+  { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#222222" }] },
+  { featureType: "transit.line", elementType: "geometry", stylers: [{ visibility: "off" }] },
+  { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#888888" }] },
+  { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#222222" }, { weight: 2.5 }] },
   { featureType: "water", elementType: "geometry", stylers: [{ color: "#111111" }] },
   { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#1A1A1A" }] },
-  { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#333333" }] },
-  { featureType: "road", elementType: "geometry.stroke", stylers: [{ visibility: "off" }] },
-  { featureType: "road.arterial", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#2A2A2A" }, { weight: 1 }] },
-  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#111111" }, { weight: 1.5 }] },
-  { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#888888" }] },
-  { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#222222" }, { weight: 3 }] },
-  { featureType: "road.local", elementType: "labels", stylers: [{ visibility: "off" }] },
-  { featureType: "transit.line", elementType: "geometry", stylers: [{ visibility: "off" }] }
+  { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#111111" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#1A1A1A" }, { weight: 0.5 }] },
+  { featureType: "road.arterial", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#282828" }, { weight: 1 }] },
+  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#333333" }, { weight: 1.5 }] },
+  { featureType: "road.local", elementType: "labels", stylers: [{ visibility: "off" }] }
 ];
 
 function initMap(lat, lon, zoom, theme) {
