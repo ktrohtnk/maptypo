@@ -126,8 +126,8 @@ async function fetchRoads(lat, lon, radiusM) {
 }
 
 const MAP_STYLE_LIGHT = [
-  // 1. 全体を完全モノクロ化（彩度ゼロ）
-  { featureType: "all", stylers: [{ saturation: -100 }] },
+  // 1. 全体のベースを「薄いベージュ（薄い黄色）」で塗りつぶす
+  { featureType: "all", elementType: "geometry", stylers: [{ color: "#F5F1E3" }] },
   
   // 2. あらゆるアイコン（号線標識、ピンなど）を「すべて完全に非表示」にする
   { featureType: "all", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
@@ -135,16 +135,15 @@ const MAP_STYLE_LIGHT = [
   // 3. お店などのPOIテキストを非表示
   { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
   
-  // 4. ベースカラー (起伏を完全に消し去ったフラットなソリッドカラー)
-  { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#E0E0E0" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#D0D0D0" }] },
-  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#D4D4D4" }] },
+  // 4. 水域や公園もベージュトーンに合わせて少し調整
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#EAE5D4" }] },
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#EFEADB" }] },
   
-  // 5. 道を「純白」にしつつ、すべての道に「極薄グレーの縁取り」をつける
+  // 5. 道を「純白」にしつつ、すべての道に「背景に馴染む温かいグレーの縁取り」をつける
   { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#FFFFFF" }] },
-  { featureType: "road", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#D8D8D8" }, { weight: 1 }] },
-  { featureType: "road.arterial", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#CCCCCC" }, { weight: 1 }] },
-  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#C0C0C0" }, { weight: 1.5 }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#E3DCC5" }, { weight: 1 }] },
+  { featureType: "road.arterial", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#DCD4BA" }, { weight: 1 }] },
+  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#D1C7A8" }, { weight: 1.5 }] },
   
   // 6. 文字（指定の美しいブルーグレー）
   { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#b4bcbf" }] },
@@ -607,7 +606,7 @@ function downloadSVG() {
   const toX = (lon) => ((lon - minLon) / widthDeg) * svgWidth;
   const toY = (lat) => ((maxLat - lat) / heightDeg) * svgHeight;
 
-  let bgColor = '#F5F5F0';
+  let bgColor = '#F5F1E3';
   
   const baseHsl = hexToHSL(lastTextColorHex || '#2a3b4c');
   let randS = baseHsl.s < 30 ? 70 : baseHsl.s;
