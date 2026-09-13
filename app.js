@@ -72,29 +72,39 @@ function setBtn(loading) {
 }
 
 async function geocode(address) {
-  const fetchGeocode = async (q) => {
-    let url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`;
-    const res = await fetch(url, { headers: { 'User-Agent': 'RoadTracer/1.0' } });
-    return await res.json();
-  };
-
-  let data = await fetchGeocode(address);
-  
-  // フォールバック: 「〜区」が含まれている場合、区より後ろだけで再検索
-  if ((!data || data.length === 0) && address.includes('区')) {
-    const fallback = address.replace(/.*区/, '').trim();
-    if (fallback) data = await fetchGeocode(fallback);
-  }
-  
-  // フォールバック2: 「市」と地名の間にスペースを入れる
-  if ((!data || data.length === 0) && address.includes('市') && !address.includes(' ')) {
-    const fallback2 = address.replace('市', '市 ');
-    data = await fetchGeocode(fallback2);
-  }
-
-  if (!data || !data.length) throw new Error('住所が見つかりません（市や区の間にスペースを入れると見つかりやすいです）');
-  return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+  return new Promise((resolve, reject) => {
+    if (!window.google || !window.google.maps || !window.google.maps.Geocoder) {
+      reject(new Error('Google Maps APIが読み込まれていません'));
+      return;
+    }
+    const geocoder = new google.maps.Geocoder();
+    geocoder.geocode({ address: address, region: 'jp' }, (results, status) => {
+      if (status === 'OK' && results && results.length > 0) {
+        resolve({
+          lat: results[0].geometry.location.lat(),
+          lon: results[0].geometry.location.lng()
+        });
+      } else {
+        // Fallback for strict addresses
+        if (address.includes('区')) {
+          const fallback = address.replace(/.*区/, '').trim();
+          if (fallback) {
+            geocoder.geocode({ address: fallback, region: 'jp' }, (r, s) => {
+              if (s === 'OK' && r && r.length > 0) {
+                resolve({ lat: r[0].geometry.location.lat(), lon: r[0].geometry.location.lng() });
+              } else {
+                reject(new Error('住所が見つかりません'));
+              }
+            });
+            return;
+          }
+        }
+        reject(new Error('住所が見つかりません（より広い地名をお試しください）'));
+      }
+    });
+  });
 }
+
 
 async function fetchRoads(lat, lon, radiusM) {
   // Overpass APIの安定性とデータ精度のバランスを取るため、最大半径を3500m（7km四方）に設定
@@ -763,6 +773,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   detectUserLocation();
 
+  // Autocomplete using Google Places API (Blazing fast)
+  let autocompleteService;
+  
   locInput.addEventListener('input', (e) => {
     clearTimeout(debounceTimer);
     const val = e.target.value.trim();
@@ -772,25 +785,24 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     
-    debounceTimer = setTimeout(async () => {
-      try {
-        // featuretype=settlement で「町・市・集落」などの地名レベルに限定（お店や建物を排除）
-        let url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val)}&format=json&limit=5&featuretype=settlement`;
-        // 2. IPから現在地が判定できていれば、その周辺を「優先的に」検索（※除外はしない）
-        if (userViewbox) {
-          url += `&viewbox=${userViewbox}`;
-        }
-        
-        const res = await fetch(url, { headers: { 'User-Agent': 'RoadTracer/1.0' } });
-        const data = await res.json();
-        
+    debounceTimer = setTimeout(() => {
+      if (!window.google || !window.google.maps || !window.google.maps.places) return;
+      if (!autocompleteService) autocompleteService = new google.maps.places.AutocompleteService();
+      
+      const req = {
+        input: val,
+        types: ['(regions)'], // Only cities/regions, no businesses
+        componentRestrictions: { country: 'jp' }
+      };
+      
+      autocompleteService.getPlacePredictions(req, (predictions, status) => {
         suggestionsList.innerHTML = '';
-        if (data.length > 0) {
-          data.forEach(item => {
+        if (status === google.maps.places.PlacesServiceStatus.OK && predictions && predictions.length > 0) {
+          predictions.forEach(item => {
             const li = document.createElement('li');
-            li.textContent = item.display_name;
+            li.textContent = item.description;
             li.addEventListener('click', () => {
-              locInput.value = item.display_name;
+              locInput.value = item.description;
               suggestionsList.classList.add('hidden');
             });
             suggestionsList.appendChild(li);
@@ -799,10 +811,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
           suggestionsList.classList.add('hidden');
         }
-      } catch (err) {
-        console.error('Autocomplete fetch error:', err);
-      }
-    }, 600); // 600ms debounce
+      });
+    }, 150);
   });
 
   // Hide suggestions when clicking outside
