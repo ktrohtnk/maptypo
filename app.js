@@ -134,9 +134,9 @@ const MAP_STYLE_LIGHT = [
   
   // 4. 道を「純白」にしつつ、すべての道に「極薄グレーの縁取り」をつける
   { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#FFFFFF" }] },
-  { featureType: "road", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#E0E0E0" }, { weight: 0.5 }] },
-  { featureType: "road.arterial", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#D8D8D8" }, { weight: 1 }] },
-  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#D0D0D0" }, { weight: 1.5 }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#D8D8D8" }, { weight: 1 }] }, // 確実に見える太さ(1)に変更
+  { featureType: "road.arterial", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#CCCCCC" }, { weight: 1 }] },
+  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#C0C0C0" }, { weight: 1.5 }] },
   
   // 5. 文字（指定の美しいブルーグレー）
   { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#b4bcbf" }] },
@@ -157,7 +157,7 @@ const MAP_STYLE_DARK = [
   { featureType: "water", elementType: "geometry", stylers: [{ color: "#111111" }] },
   { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#1A1A1A" }] },
   { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#111111" }] },
-  { featureType: "road", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#1A1A1A" }, { weight: 0.5 }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#1A1A1A" }, { weight: 1 }] },
   { featureType: "road.arterial", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#282828" }, { weight: 1 }] },
   { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#333333" }, { weight: 1.5 }] },
   { featureType: "road.local", elementType: "labels", stylers: [{ visibility: "off" }] }
