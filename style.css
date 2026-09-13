@@ -43,7 +43,12 @@ input, select, textarea {
 }
 input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
 
-input[type="checkbox"] { width: auto; accent-color: var(--braille-yellow); transform: scale(1.2); }
+input[type="checkbox"] { 
+  appearance: auto; -webkit-appearance: checkbox; 
+  width: auto; accent-color: var(--braille-yellow); 
+  transform: scale(1.2); 
+  background: initial; border: initial;
+}
 
 textarea { resize: vertical; min-height: 80px; }
 
