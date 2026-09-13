@@ -138,9 +138,9 @@ const MAP_STYLE_LIGHT = [
   { featureType: "road.arterial", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#D8D8D8" }, { weight: 1 }] },
   { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ visibility: "on" }, { color: "#D0D0D0" }, { weight: 1.5 }] },
   
-  // 5. 文字（指定の極薄カラー）
-  { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#fafaf8" }] },
-  { featureType: "all", elementType: "labels.text.stroke", stylers: [{ visibility: "off" }] }, // 白フチを消して色を際立たせる
+  // 5. 文字
+  { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#777777" }] }, // 文字色はグレーに戻す
+  { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#fafaf8" }, { weight: 3 }] }, // 白い縁（指定のオフホワイト）を復活
   { featureType: "road.local", elementType: "labels", stylers: [{ visibility: "off" }] },
   
   // 6. 線路非表示
@@ -152,8 +152,8 @@ const MAP_STYLE_DARK = [
   { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
   { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#222222" }] },
   { featureType: "transit.line", elementType: "geometry", stylers: [{ visibility: "off" }] },
-  { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#fafaf8" }] },
-  { featureType: "all", elementType: "labels.text.stroke", stylers: [{ visibility: "off" }] },
+  { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#888888" }] },
+  { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#222222" }, { weight: 3 }] },
   { featureType: "water", elementType: "geometry", stylers: [{ color: "#111111" }] },
   { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#1A1A1A" }] },
   { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#111111" }] },
