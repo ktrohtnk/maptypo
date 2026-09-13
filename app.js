@@ -601,14 +601,31 @@ window.clearTrace = clearTrace;
 window.downloadSVG = downloadSVG;
 
 // ----------------------------------------------------
-// Location Autocomplete Logic
+// Location Autocomplete Logic (IP Priority)
 // ----------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
   const locInput = document.getElementById('address-input');
   const suggestionsList = document.getElementById('location-suggestions');
   let debounceTimer;
+  let userCountryCode = '';
 
   if (!locInput || !suggestionsList) return;
+
+  // 1. IPアドレスからユーザーの国を特定（失敗してもアプリは壊れない）
+  async function detectUserCountry() {
+    try {
+      const res = await fetch('https://ipapi.co/json/');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.country_code) {
+        userCountryCode = data.country_code.toLowerCase();
+        console.log('Detected user country for search priority:', userCountryCode);
+      }
+    } catch (e) {
+      console.warn('IP country detection blocked (e.g. ad blocker). Falling back to global search.');
+    }
+  }
+  detectUserCountry();
 
   locInput.addEventListener('input', (e) => {
     clearTimeout(debounceTimer);
@@ -621,7 +638,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
     debounceTimer = setTimeout(async () => {
       try {
-        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val)}&format=json&limit=5`;
+        let url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val)}&format=json&limit=5`;
+        // 2. もしIPから国が判定できていれば、その国を優先して検索
+        if (userCountryCode) {
+          url += `&countrycodes=${userCountryCode}`;
+        }
+        
         const res = await fetch(url, { headers: { 'User-Agent': 'RoadTracer/1.0' } });
         const data = await res.json();
         
