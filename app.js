@@ -118,7 +118,7 @@ async function fetchRoads(lat, lon, widthM, heightM) {
   ];
   
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000); // 90秒で強制タイムアウト（読み込みばかりになるのを防ぐ）
+  const timeoutId = setTimeout(() => controller.abort(), 90000); // 90秒で強制タイムアウト（読み込みばかりになるのを防ぐ）
   try {
     const promises = endpoints.map(async (url) => {
       const res = await fetch(url, { 
