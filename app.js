@@ -108,13 +108,13 @@ async function fetchRoads(lat, lon, widthM, heightM) {
 
   const query = `[out:json][timeout:60];(${hwQuery});out geom;`;
   
-  // FOSS4G JapanサーバーのSSL証明書が期限切れでブラウザ通信が強制遮断されるため、
-  // 一時的にグローバルサーバーのみを使用し、重いクエリに耐えられるようタイムアウトを60秒に延長
+  // 世界中のメインサーバー（ドイツ）が現在軒並みダウン・超遅延しているため、
+  // 現在最も高速で安定しているスイスの公式ミラーサーバーを最優先に追加
   const endpoints = [
-    'https://overpass.kumi.systems/api/interpreter',
-    'https://lz4.overpass-api.de/api/interpreter',
-    'https://z.overpass-api.de/api/interpreter',
-    'https://overpass-api.de/api/interpreter'
+    'https://overpass.osm.ch/api/interpreter',      // スイス（超高速）
+    'https://lz4.overpass-api.de/api/interpreter',  // ドイツ
+    'https://z.overpass-api.de/api/interpreter',    // ドイツ
+    'https://overpass-api.de/api/interpreter'       // ドイツ
   ];
   
   const controller = new AbortController();
