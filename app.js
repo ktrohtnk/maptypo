@@ -90,34 +90,31 @@ async function geocode(address) {
 
 
 async function fetchRoads(lat, lon, widthM, heightM) {
-  // 正方形ではなく、長方形（文字の形）に合わせて取得範囲を最小化し、速度を3倍に上げる
-  const safeW = Math.min(widthM / 2, 4000) + 200; // マージン200m
-  const safeH = Math.min(heightM / 2, 4000) + 200;
-  const dLat = safeH / 111320;
-  const dLon = safeW / (111320 * Math.cos(lat * Math.PI / 180));
-  const bbox = `${lat-dLat},${lon-dLon},${lat+dLat},${lon+dLon}`;
-
-  // アダプティブ（自動最適化）：面積が広すぎる場合は極小路地を除外
-  const isLarge = Math.max(safeW, safeH) > 1500;
+  // 安定動作していた正方形の取得範囲に戻す
+  const radiusM = Math.max(widthM, heightM) / 2;
+  const safeRadius = Math.min(radiusM, 3500);
   
-  // 正規表現を避け、完全一致のOR検索にすることでOverpassのCPU負荷を下げる
-  let hwQuery = `way["highway"="motorway"](${bbox});way["highway"="trunk"](${bbox});way["highway"="primary"](${bbox});way["highway"="secondary"](${bbox});way["highway"="tertiary"](${bbox});way["highway"="residential"](${bbox});way["highway"="unclassified"](${bbox});`;
-  if (!isLarge) {
-    hwQuery += `way["highway"="pedestrian"](${bbox});way["highway"="footway"](${bbox});way["highway"="path"](${bbox});way["highway"="service"](${bbox});way["highway"="living_street"](${bbox});way["highway"="track"](${bbox});`;
+  // 以前動いていた実績のある正規表現クエリに戻す
+  let highwayTypes = "^(motorway|trunk|primary|secondary|tertiary|residential|unclassified)$";
+  if (safeRadius <= 1500) {
+    highwayTypes = "^(motorway|trunk|primary|secondary|tertiary|residential|unclassified|pedestrian|footway|path|service|living_street|track)$";
   }
 
-  const query = `[out:json][timeout:60];(${hwQuery});out geom;`;
+  const dLat = safeRadius / 111320, dLon = safeRadius / (111320 * Math.cos(lat * Math.PI / 180));
+  const query = `[out:json][timeout:60];way["highway"~"${highwayTypes}"](${lat-dLat},${lon-dLon},${lat+dLat},${lon+dLon});out geom;`;
   
   // 世界中のメインサーバー（ドイツ）が現在軒並みダウン・超遅延しているため、
   // 現在最も高速で安定しているスイスの公式ミラーサーバーを最優先に追加
   const endpoints = [
-    'https://overpass.osm.ch/api/interpreter',      // スイス（超高速）
-    'https://lz4.overpass-api.de/api/interpreter',  // ドイツ
-    'https://z.overpass-api.de/api/interpreter',    // ドイツ
-    'https://overpass-api.de/api/interpreter'       // ドイツ
+    'https://overpass-api.de/api/interpreter',
+    'https://lz4.overpass-api.de/api/interpreter',
+    'https://z.overpass-api.de/api/interpreter',
+    'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter'
   ];
   
   const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 90000); // 90秒で強制タイムアウト（読み込みばかりになるのを防ぐ）
   try {
     const promises = endpoints.map(async (url) => {
       const res = await fetch(url, { 
