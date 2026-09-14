@@ -383,6 +383,19 @@ function traceText(text, mapCenter, letterSizeMeters, allWays, connectLetters = 
       
 
       let template = TEMPLATES[char] || TEMPLATES['O']; // Fallback
+      // ユーザー要望：オープニングの最初の「T」の右側を短くし、ブルーのラインのように一筆書きで下をフックさせる
+      if (text === 'ROAD\nTRACER' && lineIndex === 1 && char === 'T') {
+        template = [
+          [
+            [0.0, 0.0],   // 左上端
+            [0.75, 0.0],  // 右上（隣のRと繋がらないように短めに止める）
+            [0.4, 0.0],   // 中央やや左へ戻る
+            [0.4, 0.85],  // 下へ降りる
+            [0.6, 1.0]    // 最後に右へ少しフックする（ブルーのライン）
+          ]
+        ];
+      }
+
       
       // ユーザー要望（修正版）：オープニングの最初の「R」をブルーのライン（突き抜けるクロスバー＋V字の右足）に強制する
       if (text === 'ROAD\nTRACER' && lineIndex === 0 && char === 'R') {
@@ -402,16 +415,11 @@ function traceText(text, mapCenter, letterSizeMeters, allWays, connectLetters = 
 
       
 
-      let adjustLon = 0;
-      if (text === 'ROAD\nTRACER' && lineIndex === 1 && char === 'T') {
-        adjustLon = letterW * 0.5; // Tを右へずらす（Rに近づける）
-      }
-
       const charBBox = {
         minLat: baseLat,
         maxLat: baseLat + letterH,
-        minLon: currentLon + adjustLon,
-        maxLon: currentLon + adjustLon + letterW
+        minLon: currentLon,
+        maxLon: currentLon + letterW
       };
 
 
