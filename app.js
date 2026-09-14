@@ -314,6 +314,13 @@ async function startTrace() {
         loc = { lat: 35.6818965, lon: 139.7657663 };
         ways = data.elements.map(el => (el.geometry || []).map(p => [p.lat, p.lon])).filter(w => w.length >= 2);
         isShowcase = true;
+      } else if (address.includes('北九州') || address.includes('小倉')) {
+        setStatus('Loading showcase map data...', 20);
+        const res = await fetch('data_kitakyushu.json');
+        const data = await res.json();
+        loc = { lat: 33.8833, lon: 130.8833 };
+        ways = data.elements.map(el => (el.geometry || []).map(p => [p.lat, p.lon])).filter(w => w.length >= 2);
+        isShowcase = true;
       } else if (address.includes('パリ') || address.toLowerCase().includes('paris')) {
         setStatus('Loading showcase map data...', 20);
         const res = await fetch('data_paris.json');
