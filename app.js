@@ -89,19 +89,24 @@ async function geocode(address) {
 }
 
 
-async function fetchRoads(lat, lon, radiusM) {
-  // Overpass APIの安定性とデータ精度のバランスを取るため、最大半径を3500m（7km四方）に設定
-  const safeRadius = Math.min(radiusM, 3500);
+async function fetchRoads(lat, lon, widthM, heightM) {
+  // 正方形ではなく、長方形（文字の形）に合わせて取得範囲を最小化し、速度を3倍に上げる
+  const safeW = Math.min(widthM / 2, 4000) + 200; // マージン200m
+  const safeH = Math.min(heightM / 2, 4000) + 200;
+  const dLat = safeH / 111320;
+  const dLon = safeW / (111320 * Math.cos(lat * Math.PI / 180));
+  const bbox = `${lat-dLat},${lon-dLon},${lat+dLat},${lon+dLon}`;
+
+  // アダプティブ（自動最適化）：面積が広すぎる場合は極小路地を除外
+  const isLarge = Math.max(safeW, safeH) > 1500;
   
-  // サーバーのパンク（数十秒のフリーズやエラー）を防ぐため、広範囲の場合は極小路地を間引く自動最適化（アダプティブ）
-  let highwayTypes = "^(motorway|trunk|primary|secondary|tertiary|residential|unclassified)$";
-  if (safeRadius <= 1500) {
-    // 範囲が狭い（文字数が少ない）場合は最高精度（すべての路地裏や歩道）を読み込む
-    highwayTypes = "^(motorway|trunk|primary|secondary|tertiary|residential|unclassified|pedestrian|footway|path|service|living_street|track)$";
+  // 正規表現を避け、完全一致のOR検索にすることでOverpassのCPU負荷を下げる
+  let hwQuery = `way["highway"="motorway"](${bbox});way["highway"="trunk"](${bbox});way["highway"="primary"](${bbox});way["highway"="secondary"](${bbox});way["highway"="tertiary"](${bbox});way["highway"="residential"](${bbox});way["highway"="unclassified"](${bbox});`;
+  if (!isLarge) {
+    hwQuery += `way["highway"="pedestrian"](${bbox});way["highway"="footway"](${bbox});way["highway"="path"](${bbox});way["highway"="service"](${bbox});way["highway"="living_street"](${bbox});way["highway"="track"](${bbox});`;
   }
 
-  const dLat = safeRadius / 111320, dLon = safeRadius / (111320 * Math.cos(lat * Math.PI / 180));
-  const query = `[out:json][timeout:60];way["highway"~"${highwayTypes}"](${lat-dLat},${lon-dLon},${lat+dLat},${lon+dLon});out geom;`;
+  const query = `[out:json][timeout:60];(${hwQuery});out geom;`;
   
   // FOSS4G JapanサーバーのSSL証明書が期限切れでブラウザ通信が強制遮断されるため、
   // 一時的にグローバルサーバーのみを使用し、重いクエリに耐えられるようタイムアウトを60秒に延長
@@ -231,7 +236,7 @@ async function startTrace() {
   if (!address || !text) return alert('場所と文字を入力してください');
 
   // キャッシュキーの作成（住所・文字・サイズ・色が同じならキャッシュを使う）
-  const cacheKey = `maptypo_cache_v22_${btoa(unescape(encodeURIComponent(address + text + letterSize + textColorHex + isRandomColor)))}`;
+  const cacheKey = `maptypo_cache_v23_${btoa(unescape(encodeURIComponent(address + text + letterSize + textColorHex + isRandomColor)))}`;
   const cached = localStorage.getItem(cacheKey);
 
   if (cached) {
