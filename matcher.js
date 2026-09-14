@@ -381,7 +381,24 @@ function traceText(text, mapCenter, letterSizeMeters, allWays, connectLetters = 
         continue; 
       }
       
-      const template = TEMPLATES[char] || TEMPLATES['O']; // Fallback
+
+      let template = TEMPLATES[char] || TEMPLATES['O']; // Fallback
+      
+      // ユーザー要望：オープニングの最初の「R」を綺麗な一筆書きルートに強制し、パーツが分離しないようにする
+      if (text === 'ROAD\nTRACER' && lineIndex === 0 && char === 'R') {
+        template = [
+          [
+            [0.2, 1.0], // 左下スタート
+            [0.2, 0.1], // 左上へ
+            [0.8, 0.1], // 右上へ
+            [0.8, 0.6], // 右中へ下がる
+            [0.2, 0.6], // 左中へ戻る（クロスバー）
+            [0.5, 0.6], // クロスバーの中央付近から
+            [0.8, 1.0]  // 右下へ抜ける（足）
+          ]
+        ];
+      }
+
       
 
       let adjustLon = 0;
