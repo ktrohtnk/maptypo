@@ -12,11 +12,6 @@ let lastLoc = null;
 let lastAddressEn = "";
 let currentAnimationId = 0;
 
-const OVERPASS_ENDPOINTS = [
-  'https://overpass-api.de/api/interpreter',
-  'https://lz4.overpass-api.de/api/interpreter',
-  'https://z.overpass-api.de/api/interpreter'
-];
 
 document.addEventListener('DOMContentLoaded', () => {
   const handleEnter = e => { 
@@ -103,12 +98,25 @@ async function fetchRoads(lat, lon, radiusM) {
   const highwayTypes = "^(motorway|trunk|primary|secondary|tertiary|residential|unclassified|pedestrian|footway|path|service|living_street|track)$";
 
   const dLat = safeRadius / 111320, dLon = safeRadius / (111320 * Math.cos(lat * Math.PI / 180));
-  const query = `[out:json][timeout:15];way["highway"~"${highwayTypes}"](${lat-dLat},${lon-dLon},${lat+dLat},${lon+dLon});out geom;`;
+  const query = `[out:json][timeout:25];way["highway"~"${highwayTypes}"](${lat-dLat},${lon-dLon},${lat+dLat},${lon+dLon});out geom;`;
   
-  // 最速でデータを取得するため、上位3つの高速サーバーに同時リクエストを送り、最初に応答したものを採用する（レーシング方式）
+  // 日本国内かどうかを判定（大まかな緯度経度）
+  const isJapan = (lat >= 20.0 && lat <= 46.0 && lon >= 122.0 && lon <= 154.0);
+  
+  // サーバーの負担分散と高速化のため、日本なら日本専用の超高速サーバーを最優先する
+  const endpoints = isJapan ? [
+    'https://overpass.osm.jp/api/interpreter',  // 日本専用の超高速サーバー（FOSS4G）
+    'https://overpass-api.de/api/interpreter',
+    'https://lz4.overpass-api.de/api/interpreter'
+  ] : [
+    'https://overpass-api.de/api/interpreter',
+    'https://lz4.overpass-api.de/api/interpreter',
+    'https://z.overpass-api.de/api/interpreter'
+  ];
+  
   const controller = new AbortController();
   try {
-    const promises = OVERPASS_ENDPOINTS.slice(0, 3).map(async (url) => {
+    const promises = endpoints.map(async (url) => {
       const res = await fetch(url, { 
         method: 'POST', 
         body: 'data=' + encodeURIComponent(query),
@@ -116,8 +124,12 @@ async function fetchRoads(lat, lon, radiusM) {
       });
       if (!res.ok) throw new Error(`Status ${res.status}`);
       const json = await res.json();
-      if (!json.elements) throw new Error('Empty');
-      return json.elements.map(el => (el.geometry || []).map(p => [p.lat, p.lon])).filter(w => w.length >= 2);
+      // データが空の場合はエラーとして投げ、Promise.anyに他のサーバーを待たせる
+      if (!json.elements || json.elements.length === 0) throw new Error('Empty Data');
+      
+      const ways = json.elements.map(el => (el.geometry || []).map(p => [p.lat, p.lon])).filter(w => w.length >= 2);
+      if (ways.length === 0) throw new Error('No valid ways');
+      return ways;
     });
 
     // 最初に成功した通信結果を受け取る
