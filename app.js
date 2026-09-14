@@ -93,9 +93,12 @@ async function fetchRoads(lat, lon, radiusM) {
   // Overpass APIの安定性とデータ精度のバランスを取るため、最大半径を3500m（7km四方）に設定
   const safeRadius = Math.min(radiusM, 3500);
   
-  // ユーザーの強い要望により、「どんなに広範囲（長文）であっても絶対に文字の精度を落とさない」ため、
-  // 路地裏（service, living_street, track）や歩道を常に全取得します。（処理時間はかかりますが精度は最高になります）
-  const highwayTypes = "^(motorway|trunk|primary|secondary|tertiary|residential|unclassified|pedestrian|footway|path|service|living_street|track)$";
+  // サーバーのパンク（数十秒のフリーズやエラー）を防ぐため、広範囲の場合は極小路地を間引く自動最適化（アダプティブ）
+  let highwayTypes = "^(motorway|trunk|primary|secondary|tertiary|residential|unclassified)$";
+  if (safeRadius <= 1500) {
+    // 範囲が狭い（文字数が少ない）場合は最高精度（すべての路地裏や歩道）を読み込む
+    highwayTypes = "^(motorway|trunk|primary|secondary|tertiary|residential|unclassified|pedestrian|footway|path|service|living_street|track)$";
+  }
 
   const dLat = safeRadius / 111320, dLon = safeRadius / (111320 * Math.cos(lat * Math.PI / 180));
   const query = `[out:json][timeout:60];way["highway"~"${highwayTypes}"](${lat-dLat},${lon-dLon},${lat+dLat},${lon+dLon});out geom;`;
@@ -228,7 +231,7 @@ async function startTrace() {
   if (!address || !text) return alert('場所と文字を入力してください');
 
   // キャッシュキーの作成（住所・文字・サイズ・色が同じならキャッシュを使う）
-  const cacheKey = `maptypo_cache_v21_${btoa(unescape(encodeURIComponent(address + text + letterSize + textColorHex + isRandomColor)))}`;
+  const cacheKey = `maptypo_cache_v22_${btoa(unescape(encodeURIComponent(address + text + letterSize + textColorHex + isRandomColor)))}`;
   const cached = localStorage.getItem(cacheKey);
 
   if (cached) {
