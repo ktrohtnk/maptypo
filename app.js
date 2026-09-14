@@ -105,7 +105,7 @@ async function fetchRoads(lat, lon, widthM, heightM) {
     hwQuery += `way["highway"="pedestrian"](${bbox});way["highway"="footway"](${bbox});way["highway"="path"](${bbox});way["highway"="service"](${bbox});way["highway"="living_street"](${bbox});way["highway"="track"](${bbox});`;
   }
 
-  const query = `[out:json][timeout:30];(${hwQuery});out geom;`;
+  const query = `[out:json][timeout:90];(${hwQuery});out geom;`;
   
   // 世界中のメインサーバー（ドイツ）が現在軒並みダウン・超遅延しているため、
   // 現在最も高速で安定しているスイスの公式ミラーサーバーを最優先に追加
