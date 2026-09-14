@@ -98,12 +98,12 @@ async function fetchRoads(lat, lon, widthM, heightM) {
 
   const isLarge = Math.max(safeW, safeH) > 1500;
   
-  let hwQuery = `way["highway"="motorway"](${bbox});way["highway"="trunk"](${bbox});way["highway"="primary"](${bbox});way["highway"="secondary"](${bbox});way["highway"="tertiary"](${bbox});way["highway"="residential"](${bbox});way["highway"="unclassified"](${bbox});`;
+  let highwayTypes = "^(motorway|trunk|primary|secondary|tertiary|residential|unclassified)$";
   if (!isLarge) {
-    hwQuery += `way["highway"="pedestrian"](${bbox});way["highway"="footway"](${bbox});way["highway"="path"](${bbox});way["highway"="service"](${bbox});way["highway"="living_street"](${bbox});way["highway"="track"](${bbox});`;
+    highwayTypes = "^(motorway|trunk|primary|secondary|tertiary|residential|unclassified|pedestrian|footway|path|service|living_street|track)$";
   }
 
-  const query = `[out:json][timeout:60];(${hwQuery});out geom;`;
+  const query = `[out:json][timeout:30];way["highway"~"${highwayTypes}"](${bbox});out geom;`;
   
   // 世界中のメインサーバー（ドイツ）が現在軒並みダウン・超遅延しているため、
   // 現在最も高速で安定しているスイスの公式ミラーサーバーを最優先に追加
@@ -116,7 +116,7 @@ async function fetchRoads(lat, lon, widthM, heightM) {
   ];
   
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 180000); // 90秒で強制タイムアウト（読み込みばかりになるのを防ぐ）
+  const timeoutId = setTimeout(() => controller.abort(), 30000); // 90秒で強制タイムアウト（読み込みばかりになるのを防ぐ）
   try {
     const promises = endpoints.map(async (url) => {
       const res = await fetch(url, { 
