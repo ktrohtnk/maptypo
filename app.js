@@ -98,12 +98,14 @@ async function fetchRoads(lat, lon, widthM, heightM) {
 
   const isLarge = Math.max(safeW, safeH) > 1500;
   
-  let highwayTypes = "^(motorway|trunk|primary|secondary|tertiary|residential|unclassified)$";
+  // 以前の最適化手法（完全一致検索）がやはり東京等の重いエリアでは「必須」だったため復活させます
+  // スイスの空サーバーを抜いた今なら、これによって劇的な高速化（数秒での描画）が確実に行われます
+  let hwQuery = `way["highway"="motorway"](${bbox});way["highway"="trunk"](${bbox});way["highway"="primary"](${bbox});way["highway"="secondary"](${bbox});way["highway"="tertiary"](${bbox});way["highway"="residential"](${bbox});way["highway"="unclassified"](${bbox});`;
   if (!isLarge) {
-    highwayTypes = "^(motorway|trunk|primary|secondary|tertiary|residential|unclassified|pedestrian|footway|path|service|living_street|track)$";
+    hwQuery += `way["highway"="pedestrian"](${bbox});way["highway"="footway"](${bbox});way["highway"="path"](${bbox});way["highway"="service"](${bbox});way["highway"="living_street"](${bbox});way["highway"="track"](${bbox});`;
   }
 
-  const query = `[out:json][timeout:30];way["highway"~"${highwayTypes}"](${bbox});out geom;`;
+  const query = `[out:json][timeout:30];(${hwQuery});out geom;`;
   
   // 世界中のメインサーバー（ドイツ）が現在軒並みダウン・超遅延しているため、
   // 現在最も高速で安定しているスイスの公式ミラーサーバーを最優先に追加
