@@ -509,7 +509,7 @@ async function animateDrawing(traceResults, textColorHex, isRandomColor, animati
     const bounds = new google.maps.LatLngBounds();
     allLatLngs.forEach(ll => bounds.extend({lat: ll[0], lng: ll[1]}));
     // 画面いっぱいに文字が広がるようにパディングを極小（10px）に変更
-    const padding = window.innerWidth < 600 ? 10 : 20;
+    const padding = window.innerWidth < 600 ? 30 : 50; // 画面いっぱいにしすぎないよう程よく引く
     map.fitBounds(bounds, padding);
     // カメラの移動完了を待つ
     await new Promise(r => setTimeout(r, 1500));
