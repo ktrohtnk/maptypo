@@ -247,3 +247,13 @@ body[data-theme="map-blue"] #map {
 .suggestions-list li:hover {
   background: #f0f0f0;
 }
+
+.sidebar-footer {
+  margin-top: auto;
+  text-align: center;
+  font-size: 0.65rem;
+  color: var(--text2);
+  opacity: 0.7;
+  padding-top: 10px;
+  letter-spacing: 0.5px;
+}
