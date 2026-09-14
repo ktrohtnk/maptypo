@@ -304,19 +304,40 @@ async function startTrace() {
     
     let loc, ways;
     // オープニングは毎回APIを叩かず、超軽量に最適化されたローカルキャッシュから一瞬で読み込む
-    if (address === '福岡市 薬院' && text === 'ROAD\nTRACER') {
-      setStatus('Loading ultra-lightweight map data...', 20);
-      try {
-        const res = await fetch('fukuoka_yakuin_optimized.json');
-        if (!res.ok) throw new Error('File not found');
+    // ショーケース都市の事前キャッシュ（爆速化）
+    let isShowcase = false;
+    try {
+      if (address.includes('東京駅')) {
+        setStatus('Loading showcase map data...', 20);
+        const res = await fetch('data_tokyo.json');
         const data = await res.json();
-        loc = { lat: 33.5835, lon: 130.3985655 }; // 薬院南公園を避けてさらに北へずらす
+        loc = { lat: 35.6818965, lon: 139.7657663 };
+        ways = data.elements.map(el => (el.geometry || []).map(p => [p.lat, p.lon])).filter(w => w.length >= 2);
+        isShowcase = true;
+      } else if (address.includes('パリ') || address.toLowerCase().includes('paris')) {
+        setStatus('Loading showcase map data...', 20);
+        const res = await fetch('data_paris.json');
+        const data = await res.json();
+        loc = { lat: 48.8588897, lon: 2.3200410 };
+        ways = data.elements.map(el => (el.geometry || []).map(p => [p.lat, p.lon])).filter(w => w.length >= 2);
+        isShowcase = true;
+      } else if (address.includes('福岡') || address.includes('薬院')) {
+        setStatus('Loading showcase map data...', 20);
+        const res = await fetch('fukuoka_yakuin_optimized.json');
+        const data = await res.json();
+        // 薬院南公園を避けてさらに北へずらす（広域をカバーしているため福岡市全体に対応可能）
+        loc = { lat: 33.5898988, lon: 130.4017509 }; 
+        if (address.includes('薬院')) {
+          loc = { lat: 33.5835, lon: 130.3985655 };
+        }
         ways = data.ways;
-      } catch (e) {
-        console.warn('Local data not found, falling back to API', e);
-        loc = await geocode(address);
+        isShowcase = true;
       }
-    } else {
+    } catch (e) {
+      console.warn('Cache load failed', e);
+    }
+
+    if (!isShowcase) {
       loc = await geocode(address);
     }
     
