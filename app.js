@@ -90,18 +90,20 @@ async function geocode(address) {
 
 
 async function fetchRoads(lat, lon, widthM, heightM) {
-  // 安定動作していた正方形の取得範囲に戻す
-  const radiusM = Math.max(widthM, heightM) / 2;
-  const safeRadius = Math.min(radiusM, 3500);
+  const safeW = Math.min(widthM / 2, 4000) + 200;
+  const safeH = Math.min(heightM / 2, 4000) + 200;
+  const dLat = safeH / 111320;
+  const dLon = safeW / (111320 * Math.cos(lat * Math.PI / 180));
+  const bbox = `${lat-dLat},${lon-dLon},${lat+dLat},${lon+dLon}`;
+
+  const isLarge = Math.max(safeW, safeH) > 1500;
   
-  // 以前動いていた実績のある正規表現クエリに戻す
-  let highwayTypes = "^(motorway|trunk|primary|secondary|tertiary|residential|unclassified)$";
-  if (safeRadius <= 1500) {
-    highwayTypes = "^(motorway|trunk|primary|secondary|tertiary|residential|unclassified|pedestrian|footway|path|service|living_street|track)$";
+  let hwQuery = `way["highway"="motorway"](${bbox});way["highway"="trunk"](${bbox});way["highway"="primary"](${bbox});way["highway"="secondary"](${bbox});way["highway"="tertiary"](${bbox});way["highway"="residential"](${bbox});way["highway"="unclassified"](${bbox});`;
+  if (!isLarge) {
+    hwQuery += `way["highway"="pedestrian"](${bbox});way["highway"="footway"](${bbox});way["highway"="path"](${bbox});way["highway"="service"](${bbox});way["highway"="living_street"](${bbox});way["highway"="track"](${bbox});`;
   }
 
-  const dLat = safeRadius / 111320, dLon = safeRadius / (111320 * Math.cos(lat * Math.PI / 180));
-  const query = `[out:json][timeout:60];way["highway"~"${highwayTypes}"](${lat-dLat},${lon-dLon},${lat+dLat},${lon+dLon});out geom;`;
+  const query = `[out:json][timeout:60];(${hwQuery});out geom;`;
   
   // 世界中のメインサーバー（ドイツ）が現在軒並みダウン・超遅延しているため、
   // 現在最も高速で安定しているスイスの公式ミラーサーバーを最優先に追加
@@ -114,7 +116,7 @@ async function fetchRoads(lat, lon, widthM, heightM) {
   ];
   
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 90000); // 90秒で強制タイムアウト（読み込みばかりになるのを防ぐ）
+  const timeoutId = setTimeout(() => controller.abort(), 180000); // 90秒で強制タイムアウト（読み込みばかりになるのを防ぐ）
   try {
     const promises = endpoints.map(async (url) => {
       const res = await fetch(url, { 
