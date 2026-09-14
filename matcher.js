@@ -383,12 +383,19 @@ function traceText(text, mapCenter, letterSizeMeters, allWays, connectLetters = 
       
       const template = TEMPLATES[char] || TEMPLATES['O']; // Fallback
       
+
+      let adjustLon = 0;
+      if (text === 'ROAD\nTRACER' && lineIndex === 1 && char === 'T') {
+        adjustLon = letterW * 0.5; // Tを右へずらす（Rに近づける）
+      }
+
       const charBBox = {
         minLat: baseLat,
         maxLat: baseLat + letterH,
-        minLon: currentLon,
-        maxLon: currentLon + letterW
+        minLon: currentLon + adjustLon,
+        maxLon: currentLon + adjustLon + letterW
       };
+
 
       const strokePaths = [];
       let firstPointLat = null, firstPointLon = null;
