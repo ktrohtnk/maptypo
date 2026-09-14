@@ -383,15 +383,16 @@ function traceText(text, mapCenter, letterSizeMeters, allWays, connectLetters = 
       
 
       let template = TEMPLATES[char] || TEMPLATES['O']; // Fallback
-      // ユーザー要望：オープニングの最初の「T」の右側を短くし、ブルーのラインのように一筆書きで下をフックさせる
+      // ユーザー要望：オープニングの最初の「T」の右端を赤線の通りに斜め右下へ伸ばす
       if (text === 'ROAD\nTRACER' && lineIndex === 1 && char === 'T') {
         template = [
           [
             [0.0, 0.0],   // 左上端
-            [0.75, 0.0],  // 右上（隣のRと繋がらないように短めに止める）
+            [0.75, 0.0],  // 右上へ
+            [1.0, 0.3],   // ユーザー要望（赤線）：斜め右下へ伸ばす
             [0.4, 0.0],   // 中央やや左へ戻る
             [0.4, 0.85],  // 下へ降りる
-            [0.6, 1.0]    // 最後に右へ少しフックする（ブルーのライン）
+            [0.6, 1.0]    // 最後に右へフック
           ]
         ];
       }
