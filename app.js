@@ -318,7 +318,7 @@ async function startTrace() {
         setStatus('Loading showcase map data...', 20);
         const res = await fetch('data_moji.json');
         const data = await res.json();
-        loc = { lat: 33.9038836, lon: 130.9453613 }; // 門司区大里
+        loc = { lat: 33.9158490, lon: 130.9408120 }; // 門司区大里本町
         ways = data.elements.map(el => (el.geometry || []).map(p => [p.lat, p.lon])).filter(w => w.length >= 2);
         isShowcase = true;
       } else if (address.includes('北九州') || address.includes('小倉')) {
