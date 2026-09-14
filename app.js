@@ -59,9 +59,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 function setStatus(text, pct) {
-  document.getElementById('status-bar').classList.remove('hidden');
+  const bar = document.getElementById('status-bar');
+  if (pct === null) {
+    bar.classList.add('hidden');
+    return;
+  }
+  bar.classList.remove('hidden');
   document.getElementById('status-text').textContent = text;
-  document.getElementById('progress-fill').style.width = pct + '%';
+  
+  const path = document.getElementById('progress-path');
+  if (path) {
+    const pathLength = path.getTotalLength();
+    path.style.strokeDasharray = pathLength;
+    path.style.transition = 'stroke-dashoffset 0.3s ease-out';
+    path.style.strokeDashoffset = pathLength - (pathLength * (pct / 100));
+  }
 }
 
 function setBtn(loading) {
