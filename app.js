@@ -236,8 +236,16 @@ async function startTrace() {
   if (!address || !text) return alert('場所と文字を入力してください');
 
   // キャッシュキーの作成（住所・文字・サイズ・色が同じならキャッシュを使う）
-  const cacheKey = `maptypo_cache_v24_${btoa(unescape(encodeURIComponent(address + text + letterSize + textColorHex + isRandomColor)))}`;
-  const cached = localStorage.getItem(cacheKey);
+  const baseKey = btoa(unescape(encodeURIComponent(address + text + letterSize + textColorHex + isRandomColor)));
+  const cacheKey = `maptypo_cache_v25_${baseKey}`;
+  
+  // 世界的なサーバー障害に備え、過去の全バージョンのキャッシュを探して復元する
+  const cached = localStorage.getItem(cacheKey) || 
+                 localStorage.getItem(`maptypo_cache_v24_${baseKey}`) ||
+                 localStorage.getItem(`maptypo_cache_v23_${baseKey}`) ||
+                 localStorage.getItem(`maptypo_cache_v22_${baseKey}`) ||
+                 localStorage.getItem(`maptypo_cache_v21_${baseKey}`) ||
+                 localStorage.getItem(`maptypo_cache_v20_${baseKey}`);
 
   if (cached) {
     try {
