@@ -307,7 +307,7 @@ async function startTrace() {
     // ショーケース都市の事前キャッシュ（爆速化）
     let isShowcase = false;
     try {
-      if (address.includes('東京駅')) {
+      if (address.includes('東京') || address.toLowerCase().includes('tokyo')) {
         setStatus('Loading showcase map data...', 20);
         const res = await fetch('data_tokyo.json');
         const data = await res.json();
