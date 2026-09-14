@@ -98,20 +98,15 @@ async function fetchRoads(lat, lon, radiusM) {
   const highwayTypes = "^(motorway|trunk|primary|secondary|tertiary|residential|unclassified|pedestrian|footway|path|service|living_street|track)$";
 
   const dLat = safeRadius / 111320, dLon = safeRadius / (111320 * Math.cos(lat * Math.PI / 180));
-  const query = `[out:json][timeout:25];way["highway"~"${highwayTypes}"](${lat-dLat},${lon-dLon},${lat+dLat},${lon+dLon});out geom;`;
+  const query = `[out:json][timeout:60];way["highway"~"${highwayTypes}"](${lat-dLat},${lon-dLon},${lat+dLat},${lon+dLon});out geom;`;
   
-  // 日本国内かどうかを判定（大まかな緯度経度）
-  const isJapan = (lat >= 20.0 && lat <= 46.0 && lon >= 122.0 && lon <= 154.0);
-  
-  // サーバーの負担分散と高速化のため、日本なら日本専用の超高速サーバーを最優先する
-  const endpoints = isJapan ? [
-    'https://overpass.osm.jp/api/interpreter',  // 日本専用の超高速サーバー（FOSS4G）
-    'https://overpass-api.de/api/interpreter',
-    'https://lz4.overpass-api.de/api/interpreter'
-  ] : [
-    'https://overpass-api.de/api/interpreter',
+  // FOSS4G JapanサーバーのSSL証明書が期限切れでブラウザ通信が強制遮断されるため、
+  // 一時的にグローバルサーバーのみを使用し、重いクエリに耐えられるようタイムアウトを60秒に延長
+  const endpoints = [
+    'https://overpass.kumi.systems/api/interpreter',
     'https://lz4.overpass-api.de/api/interpreter',
-    'https://z.overpass-api.de/api/interpreter'
+    'https://z.overpass-api.de/api/interpreter',
+    'https://overpass-api.de/api/interpreter'
   ];
   
   const controller = new AbortController();
