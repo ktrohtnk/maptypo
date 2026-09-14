@@ -286,7 +286,7 @@ async function startTrace() {
         const res = await fetch('fukuoka_yakuin_optimized.json');
         if (!res.ok) throw new Error('File not found');
         const data = await res.json();
-        loc = { lat: 33.5822, lon: 130.3985655 }; // Rを綺麗に描画するため少し北へずらす
+        loc = { lat: 33.5835, lon: 130.3985655 }; // 薬院南公園を避けてさらに北へずらす
         ways = data.ways;
       } catch (e) {
         console.warn('Local data not found, falling back to API', e);
