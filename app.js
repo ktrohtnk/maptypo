@@ -89,7 +89,7 @@ async function geocode(address) {
 }
 
 
-async function fetchRoads(lat, lon, widthM, heightM) {
+async function fetchRoads(lat, lon, widthM, heightM = widthM) {
   const safeW = Math.min(widthM / 2, 4000) + 200;
   const safeH = Math.min(heightM / 2, 4000) + 200;
   const dLat = safeH / 111320;
@@ -392,8 +392,9 @@ async function startTrace() {
 
     if (!ways) {
       setStatus('Fetching road network...', 40);
-      const fetchRadius = Math.max(800, requiredSize / 2 + 300); // 最小範囲を小さくして超高速化
-      ways = await fetchRoads(loc.lat, loc.lon, fetchRadius);
+      const fetchW = Math.max(800, estimatedWidth);
+      const fetchH = Math.max(800, estimatedHeight);
+      ways = await fetchRoads(loc.lat, loc.lon, fetchW, fetchH);
     }
 
     if (ways.length === 0) throw new Error('道路データが取得できませんでした');
