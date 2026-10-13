@@ -74,6 +74,14 @@ async function geocode(address) {
 
   let data = await fetchGeocode(address);
   
+  if (!data || data.length === 0) {
+    const spaced = address
+      .replace(/(東京都|北海道|(?:京都|大阪)府|.{2,3}県)\s*/g, '$1 ')
+      .replace(/([^\s]+?[市区町村郡])\s*/g, '$1 ')
+      .trim();
+    if (spaced !== address) data = await fetchGeocode(spaced);
+  }
+
   if ((!data || data.length === 0) && address.includes('区')) {
     const fallback = address.replace(/.*区/, '').trim();
     if (fallback) data = await fetchGeocode(fallback);
@@ -238,15 +246,8 @@ async function startTrace() {
 
   // キャッシュキーの作成（住所・文字・サイズ・色が同じならキャッシュを使う）
   const baseKey = btoa(unescape(encodeURIComponent(address + text + letterSize + textColorHex + isRandomColor)));
-  const cacheKey = `maptypo_cache_v25_${baseKey}`;
-  
-  // 世界的なサーバー障害に備え、過去の全バージョンのキャッシュを探して復元する
-  const cached = localStorage.getItem(cacheKey) || 
-                 localStorage.getItem(`maptypo_cache_v24_${baseKey}`) ||
-                 localStorage.getItem(`maptypo_cache_v23_${baseKey}`) ||
-                 localStorage.getItem(`maptypo_cache_v22_${baseKey}`) ||
-                 localStorage.getItem(`maptypo_cache_v21_${baseKey}`) ||
-                 localStorage.getItem(`maptypo_cache_v20_${baseKey}`);
+  const cacheKey = `maptypo_cache_v26_${baseKey}`;
+  const cached = localStorage.getItem(cacheKey);
 
   if (cached) {
     try {
@@ -307,41 +308,42 @@ async function startTrace() {
     // ショーケース都市の事前キャッシュ（爆速化）
     let isShowcase = false;
     try {
-      if (address.includes('東京') || address.toLowerCase().includes('tokyo')) {
+      const normAddr = address.replace(/[\s　]+/g, '').toLowerCase();
+      if (['東京', '東京駅', 'tokyo', 'tokyostation'].includes(normAddr)) {
         setStatus('Loading showcase map data...', 20);
         const res = await fetch('data_tokyo.json');
         const data = await res.json();
         loc = { lat: 35.6818965, lon: 139.7657663 };
         ways = data.elements.map(el => (el.geometry || []).map(p => [p.lat, p.lon])).filter(w => w.length >= 2);
         isShowcase = true;
-      } else if (address.includes('門司')) {
+      } else if (['門司', '門司区', '北九州市門司区', '門司区大里', '門司区大里本町', '北九州市門司区大里', '北九州市門司区大里本町'].includes(normAddr)) {
         setStatus('Loading showcase map data...', 20);
         const res = await fetch('data_moji.json');
         const data = await res.json();
         loc = { lat: 33.9158490, lon: 130.9408120 }; // 門司区大里本町
         ways = data.elements.map(el => (el.geometry || []).map(p => [p.lat, p.lon])).filter(w => w.length >= 2);
         isShowcase = true;
-      } else if (address.includes('北九州') || address.includes('小倉')) {
+      } else if (['北九州', '北九州市', '小倉', '小倉北区', '北九州市小倉北区'].includes(normAddr)) {
         setStatus('Loading showcase map data...', 20);
         const res = await fetch('data_kitakyushu.json');
         const data = await res.json();
         loc = { lat: 33.8833, lon: 130.8833 };
         ways = data.elements.map(el => (el.geometry || []).map(p => [p.lat, p.lon])).filter(w => w.length >= 2);
         isShowcase = true;
-      } else if (address.includes('パリ') || address.toLowerCase().includes('paris')) {
+      } else if (['パリ', 'paris'].includes(normAddr)) {
         setStatus('Loading showcase map data...', 20);
         const res = await fetch('data_paris.json');
         const data = await res.json();
         loc = { lat: 48.8588897, lon: 2.3200410 };
         ways = data.elements.map(el => (el.geometry || []).map(p => [p.lat, p.lon])).filter(w => w.length >= 2);
         isShowcase = true;
-      } else if (address.includes('福岡') || address.includes('薬院')) {
+      } else if (['福岡', '福岡市', '薬院', '福岡市薬院', '福岡市中央区薬院'].includes(normAddr)) {
         setStatus('Loading showcase map data...', 20);
         const res = await fetch('fukuoka_yakuin_optimized.json');
         const data = await res.json();
         // 薬院南公園を避けてさらに北へずらす（広域をカバーしているため福岡市全体に対応可能）
         loc = { lat: 33.5898988, lon: 130.4017509 }; 
-        if (address.includes('薬院')) {
+        if (normAddr.includes('薬院')) {
           loc = { lat: 33.5835, lon: 130.3985655 };
         }
         ways = data.ways;
