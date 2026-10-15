@@ -93,7 +93,108 @@ async function geocode(address) {
   }
 
   if (!data || !data.length) throw new Error('住所が見つかりません');
-  return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+  // Nominatimのboundingbox は [south, north, west, east] の文字列配列
+  const bbox = Array.isArray(data[0].boundingbox) ? data[0].boundingbox.map(parseFloat) : null;
+  return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon), bbox };
+}
+
+// ─── 広域検索（例: New York）で道が多い場所を自動選択する ─────────────────────
+const OVERPASS_ENDPOINTS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://lz4.overpass-api.de/api/interpreter',
+  'https://z.overpass-api.de/api/interpreter',
+  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter'
+];
+
+// 検索結果が広域（約8km超）かどうか
+function isLargeArea(loc) {
+  if (!loc.bbox) return false;
+  const [s, n, w, e] = loc.bbox;
+  const hKm = (n - s) * 111.32;
+  const wKm = (e - w) * 111.32 * Math.cos(loc.lat * Math.PI / 180);
+  return Math.max(hKm, wKm) > 8;
+}
+
+// 中心(lat, lon)から ±halfSpanM の範囲に n×n 個の候補点を作る
+function gridCenters(lat, lon, halfSpanM, n) {
+  const out = [];
+  const cosLat = Math.cos(lat * Math.PI / 180);
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < n; j++) {
+      const fy = (i / (n - 1)) * 2 - 1;
+      const fx = (j / (n - 1)) * 2 - 1;
+      out.push({
+        lat: lat + (fy * halfSpanM) / 111320,
+        lon: lon + (fx * halfSpanM) / (111320 * cosLat)
+      });
+    }
+  }
+  return out;
+}
+
+// 各候補点の周囲（±halfM四方）の道路本数を、1回のOverpass通信でまとめて数える（geometryは取得しないので軽量）
+async function countRoadsAround(centers, halfM) {
+  const parts = centers.map(c => {
+    const dLat = halfM / 111320;
+    const dLon = halfM / (111320 * Math.cos(c.lat * Math.PI / 180));
+    const b = `${c.lat - dLat},${c.lon - dLon},${c.lat + dLat},${c.lon + dLon}`;
+    return `(way["highway"="primary"](${b});way["highway"="secondary"](${b});way["highway"="tertiary"](${b});way["highway"="residential"](${b});way["highway"="unclassified"](${b}););out count;`;
+  });
+  const query = `[out:json][timeout:25];${parts.join('')}`;
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  try {
+    const counts = await Promise.any(OVERPASS_ENDPOINTS.map(async (url) => {
+      const res = await fetch(url, {
+        method: 'POST',
+        body: 'data=' + encodeURIComponent(query),
+        signal: controller.signal
+      });
+      if (!res.ok) throw new Error(`Status ${res.status}`);
+      const json = await res.json();
+      const list = (json.elements || [])
+        .filter(el => el.type === 'count')
+        .map(el => parseInt(el.tags && el.tags.ways, 10) || 0);
+      if (list.length !== centers.length) throw new Error('Unexpected count result');
+      return list;
+    }));
+    controller.abort();
+    return counts;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+// 広域の場合のみ、道路密度が最も高い地点へ中心を移動する（失敗時は元の中心をそのまま使う）
+async function pickDenseCenter(loc) {
+  if (!isLargeArea(loc)) return loc;
+  try {
+    const [s, n, w, e] = loc.bbox;
+    const cosLat = Math.cos(loc.lat * Math.PI / 180);
+    const spanM = Math.max((n - s) * 111320, (e - w) * 111320 * cosLat);
+    const halfSpan = Math.min(12000, spanM / 2);
+
+    // 1段階目：広く粗くスキャン（5×5地点）
+    let centers = gridCenters(loc.lat, loc.lon, halfSpan, 5);
+    let counts = await countRoadsAround(centers, 600);
+    let best = counts.indexOf(Math.max(...counts));
+    if (counts[best] === 0) return loc;
+    let bestCenter = centers[best];
+
+    // 2段階目：見つかった高密度エリア周辺を細かくスキャン（5×5地点）
+    const fineHalf = halfSpan / 3;
+    centers = gridCenters(bestCenter.lat, bestCenter.lon, fineHalf, 5);
+    counts = await countRoadsAround(centers, 600);
+    best = counts.indexOf(Math.max(...counts));
+    if (counts[best] > 0) bestCenter = centers[best];
+
+    return { ...loc, lat: bestCenter.lat, lon: bestCenter.lon, bbox: null };
+  } catch (e) {
+    console.warn('Dense center search failed, using geocoded center', e);
+    return loc;
+  }
 }
 
 
@@ -246,7 +347,7 @@ async function startTrace() {
 
   // キャッシュキーの作成（住所・文字・サイズ・色が同じならキャッシュを使う）
   const baseKey = btoa(unescape(encodeURIComponent(address + text + letterSize + textColorHex + isRandomColor)));
-  const cacheKey = `maptypo_cache_v26_${baseKey}`;
+  const cacheKey = `maptypo_cache_v27_${baseKey}`;
   const cached = localStorage.getItem(cacheKey);
 
   if (cached) {
@@ -355,6 +456,10 @@ async function startTrace() {
 
     if (!isShowcase) {
       loc = await geocode(address);
+      if (isLargeArea(loc)) {
+        setStatus('Finding the area with the most roads...', 30);
+        loc = await pickDenseCenter(loc);
+      }
     }
     
     // キャンバス（地図データ）の取得範囲の安全上限
