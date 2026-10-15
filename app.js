@@ -141,10 +141,10 @@ async function countRoadsAround(centers, halfM) {
     const b = `${c.lat - dLat},${c.lon - dLon},${c.lat + dLat},${c.lon + dLon}`;
     return `(way["highway"="primary"](${b});way["highway"="secondary"](${b});way["highway"="tertiary"](${b});way["highway"="residential"](${b});way["highway"="unclassified"](${b}););out count;`;
   });
-  const query = `[out:json][timeout:25];${parts.join('')}`;
+  const query = `[out:json][timeout:40];${parts.join('')}`;
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
   try {
     const counts = await Promise.any(OVERPASS_ENDPOINTS.map(async (url) => {
       const res = await fetch(url, {
@@ -167,28 +167,60 @@ async function countRoadsAround(centers, halfM) {
   }
 }
 
-// 広域の場合のみ、道路密度が最も高い地点へ中心を移動する（失敗時は元の中心をそのまま使う）
-async function pickDenseCenter(loc) {
+// 候補中心ごとに、文字ブロック全体（四隅・辺の中点・中央の3×3地点）の道路本数を数えてスコア化する。
+// 一部（1文字目など）が川や海にかかる場所は「どこかが0本」になるため点数が大きく下がる。
+const FOOTPRINT_LATTICE = [-1, 0, 1];
+
+function footprintSamplePoints(center, footW, footH) {
+  const cosLat = Math.cos(center.lat * Math.PI / 180);
+  const pts = [];
+  for (const fy of FOOTPRINT_LATTICE) {
+    for (const fx of FOOTPRINT_LATTICE) {
+      pts.push({
+        lat: center.lat + (fy * footH * 0.45) / 111320,
+        lon: center.lon + (fx * footW * 0.45) / (111320 * cosLat)
+      });
+    }
+  }
+  return pts;
+}
+
+// 合計の道路量 + 「最も道が少ない地点」を重く評価（全体が道に乗っている場所を優先）
+function footprintScore(counts) {
+  const sumLog = counts.reduce((a, c) => a + Math.log(1 + c), 0);
+  const minLog = Math.log(1 + Math.min(...counts));
+  return sumLog + 3 * minLog;
+}
+
+async function scoreCenters(centers, footW, footH, halfM) {
+  const perCenter = FOOTPRINT_LATTICE.length * FOOTPRINT_LATTICE.length;
+  const points = centers.flatMap(c => footprintSamplePoints(c, footW, footH));
+  const counts = await countRoadsAround(points, halfM);
+  return centers.map((_, i) => footprintScore(counts.slice(i * perCenter, (i + 1) * perCenter)));
+}
+
+// 広域の場合のみ、文字ブロック全体が道に乗る地点へ中心を移動する（失敗時は元の中心をそのまま使う）
+async function pickDenseCenter(loc, footW, footH, letterM) {
   if (!isLargeArea(loc)) return loc;
   try {
     const [s, n, w, e] = loc.bbox;
     const cosLat = Math.cos(loc.lat * Math.PI / 180);
     const spanM = Math.max((n - s) * 111320, (e - w) * 111320 * cosLat);
     const halfSpan = Math.min(12000, spanM / 2);
+    const sampleHalf = Math.max(100, Math.min(400, letterM * 0.3));
 
-    // 1段階目：広く粗くスキャン（5×5地点）
-    let centers = gridCenters(loc.lat, loc.lon, halfSpan, 5);
-    let counts = await countRoadsAround(centers, 600);
-    let best = counts.indexOf(Math.max(...counts));
-    if (counts[best] === 0) return loc;
+    // 1段階目：広く粗くスキャン（4×4候補 × 9サンプル）
+    let centers = gridCenters(loc.lat, loc.lon, halfSpan, 4);
+    let scores = await scoreCenters(centers, footW, footH, sampleHalf);
+    let best = scores.indexOf(Math.max(...scores));
+    if (scores[best] <= 0) return loc;
     let bestCenter = centers[best];
 
-    // 2段階目：見つかった高密度エリア周辺を細かくスキャン（5×5地点）
-    const fineHalf = halfSpan / 3;
-    centers = gridCenters(bestCenter.lat, bestCenter.lon, fineHalf, 5);
-    counts = await countRoadsAround(centers, 600);
-    best = counts.indexOf(Math.max(...counts));
-    if (counts[best] > 0) bestCenter = centers[best];
+    // 2段階目：見つかった高スコア周辺を細かくスキャン（4×4候補 × 9サンプル）
+    centers = gridCenters(bestCenter.lat, bestCenter.lon, halfSpan / 3, 4);
+    scores = await scoreCenters(centers, footW, footH, sampleHalf);
+    best = scores.indexOf(Math.max(...scores));
+    if (scores[best] > 0) bestCenter = centers[best];
 
     return { ...loc, lat: bestCenter.lat, lon: bestCenter.lon, bbox: null };
   } catch (e) {
@@ -347,7 +379,7 @@ async function startTrace() {
 
   // キャッシュキーの作成（住所・文字・サイズ・色が同じならキャッシュを使う）
   const baseKey = btoa(unescape(encodeURIComponent(address + text + letterSize + textColorHex + isRandomColor)));
-  const cacheKey = `maptypo_cache_v27_${baseKey}`;
+  const cacheKey = `maptypo_cache_v28_${baseKey}`;
   const cached = localStorage.getItem(cacheKey);
 
   if (cached) {
@@ -456,10 +488,6 @@ async function startTrace() {
 
     if (!isShowcase) {
       loc = await geocode(address);
-      if (isLargeArea(loc)) {
-        setStatus('Finding the area with the most roads...', 30);
-        loc = await pickDenseCenter(loc);
-      }
     }
     
     // キャンバス（地図データ）の取得範囲の安全上限
@@ -486,6 +514,14 @@ async function startTrace() {
     }
 
     const requiredSize = Math.max(estimatedWidth, estimatedHeight);
+
+    // 広域検索（New York等）の場合：文字ブロック全体が道の多い場所に乗るよう中心を選び直す
+    if (!isShowcase && isLargeArea(loc)) {
+      setStatus('Finding the area with the most roads...', 30);
+      const footW = (maxLineLen + (maxLineLen - 1) * 0.3) * actualLetterSize;
+      const footH = (lines.length + (lines.length - 1) * 0.5) * actualLetterSize;
+      loc = await pickDenseCenter(loc, footW, footH, actualLetterSize);
+    }
     
     let zoom = 14;
     if (requiredSize > 3000) zoom = 13;

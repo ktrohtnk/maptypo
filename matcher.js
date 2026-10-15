@@ -332,6 +332,64 @@ function traceText(text, mapCenter, letterSizeMeters, allWays, connectLetters = 
   const gapW = letterW * 0.3; // Space between letters
   const gapH = letterH * 0.5; // Space between lines
 
+  // ─── 1文字目が川・海・道なしで失敗するのを防ぐ「ずらして再挑戦」用の補助 ───
+  const RETRY_QUALITY = 0.15;                 // これより誤差が大きい文字だけ再挑戦
+  const RETRY_SHIFT_X = [-0.3, -0.15, 0, 0.15, 0.3]; // 文字幅に対する横ずらし量
+  const RETRY_SHIFT_Y = [-0.4, -0.2, 0, 0.2, 0.4];   // 文字高さに対する縦ずらし量
+
+  // 道路ノードの空間インデックス（ずらした位置に道があるかを高速に判定する）
+  let nodeIndex = null;
+  const idxCellLat = letterH / 6;
+  const idxCellLon = letterW / 6;
+  const getNodeIndex = () => {
+    if (nodeIndex) return nodeIndex;
+    nodeIndex = new Map();
+    nodes.forEach(n => {
+      const key = Math.floor(n.lat / idxCellLat) + ',' + Math.floor(n.lon / idxCellLon);
+      let bucket = nodeIndex.get(key);
+      if (!bucket) { bucket = []; nodeIndex.set(key, bucket); }
+      bucket.push(n);
+    });
+    return nodeIndex;
+  };
+  // 指定地点から最寄りの道路ノードまでの距離（文字サイズ比。最大0.6）
+  const nearestGap = (lat, lon) => {
+    const idx = getNodeIndex();
+    const cy = Math.floor(lat / idxCellLat);
+    const cx = Math.floor(lon / idxCellLon);
+    let best = 0.6;
+    for (let dy = -3; dy <= 3; dy++) {
+      for (let dx = -3; dx <= 3; dx++) {
+        const bucket = idx.get((cy + dy) + ',' + (cx + dx));
+        if (!bucket) continue;
+        for (const n of bucket) {
+          const d = Math.hypot((n.lat - lat) / letterH, (n.lon - lon) / letterW);
+          if (d < best) best = d;
+        }
+      }
+    }
+    return best;
+  };
+  // 文字の骨格（頂点と各辺の中点）が道路からどれだけ離れているかの平均
+  const roadGapScore = (tpl, bbox) => {
+    let sum = 0, cnt = 0;
+    for (const stroke of tpl) {
+      if (!stroke) continue;
+      for (let i = 0; i < stroke.length; i++) {
+        const p = stroke[i];
+        if (!p || p.length < 2) continue;
+        sum += nearestGap(bbox.maxLat - p[1] * letterH, bbox.minLon + p[0] * letterW);
+        cnt++;
+        const q = stroke[i + 1];
+        if (q && q.length >= 2) {
+          sum += nearestGap(bbox.maxLat - ((p[1] + q[1]) / 2) * letterH, bbox.minLon + ((p[0] + q[0]) / 2) * letterW);
+          cnt++;
+        }
+      }
+    }
+    return cnt > 0 ? sum / cnt : 0;
+  };
+
   // Calculate total height to center vertically
   const totalH = (lines.length * letterH) + ((lines.length - 1) * gapH);
   let currentLat = mapCenter[0] + (totalH / 2); // Start from the top edge
@@ -418,63 +476,112 @@ function traceText(text, mapCenter, letterSizeMeters, allWays, connectLetters = 
 
       
 
-      const charBBox = {
+      const baseBBox = {
         minLat: baseLat,
         maxLat: baseLat + letterH,
         minLon: currentLon,
         maxLon: currentLon + letterW
       };
 
+      // 指定した枠(bbox)に1文字ぶんをなぞる。
+      // 各ストロークの始点・終点が目標からどれだけズレたか（文字高さ比の平均＝quality。小さいほど良い）も返す
+      const traceLetterAt = (bbox) => {
+        const paths = [];
+        let fLat = null, fLon = null;
+        let lLat = null, lLon = null;
+        let errSum = 0, errCnt = 0;
 
-      const strokePaths = [];
-      let firstPointLat = null, firstPointLon = null;
-      let lastPointLat = null, lastPointLon = null;
+        // Map template 0.0-1.0 coords to geographical coords and trace
+        for (const stroke of template) {
+          if (!stroke || stroke.length < 2) continue;
+          let currentPath = [];
 
-      // Map template 0.0-1.0 coords to geographical coords and trace
-      for (const stroke of template) {
-        if (!stroke || stroke.length < 2) continue;
-        let currentPath = [];
-        
-        for (let i = 0; i < stroke.length - 1; i++) {
-          const p1 = stroke[i];
-          const p2 = stroke[i+1];
-          if (!p1 || !p2 || p1.length < 2 || p2.length < 2) continue;
-          
-          // Y in template is 0.0 (top) to 1.0 (bottom). Map lat is higher=top.
-          const startLat = charBBox.maxLat - (p1[1] * letterH);
-          const startLon = charBBox.minLon + (p1[0] * letterW);
-          const endLat = charBBox.maxLat - (p2[1] * letterH);
-          const endLon = charBBox.minLon + (p2[0] * letterW);
+          for (let i = 0; i < stroke.length - 1; i++) {
+            const p1 = stroke[i];
+            const p2 = stroke[i+1];
+            if (!p1 || !p2 || p1.length < 2 || p2.length < 2) continue;
 
-          if (firstPointLat === null) {
-            firstPointLat = startLat;
-            firstPointLon = startLon;
-          }
+            // Y in template is 0.0 (top) to 1.0 (bottom). Map lat is higher=top.
+            const startLat = bbox.maxLat - (p1[1] * letterH);
+            const startLon = bbox.minLon + (p1[0] * letterW);
+            const endLat = bbox.maxLat - (p2[1] * letterH);
+            const endLon = bbox.minLon + (p2[0] * letterW);
 
-          // Walk the road network!
-          const roadSegment = walkStroke(startLat, startLon, endLat, endLon, graph, nodes);
-          
-          if (roadSegment.length > 0) {
-            if (currentPath.length > 0) {
-              // Join with previous segment by walking the road network, NOT drawing a straight line
-              const prevEnd = currentPath[currentPath.length - 1];
-              const nextStart = roadSegment[0];
-              const connector = walkStroke(prevEnd[0], prevEnd[1], nextStart[0], nextStart[1], graph, nodes);
-              
-              if (connector.length > 0) {
-                currentPath.push(...connector.slice(1));
-              }
-              currentPath.push(...roadSegment.slice(1));
-            } else {
-              currentPath = roadSegment;
+            if (fLat === null) {
+              fLat = startLat;
+              fLon = startLon;
             }
-            lastPointLat = roadSegment[roadSegment.length - 1][0];
-            lastPointLon = roadSegment[roadSegment.length - 1][1];
+
+            // Walk the road network!
+            const roadSegment = walkStroke(startLat, startLon, endLat, endLon, graph, nodes);
+
+            if (roadSegment.length > 0) {
+              const rs0 = roadSegment[0];
+              const rs1 = roadSegment[roadSegment.length - 1];
+              errSum += (Math.hypot((rs0[0] - startLat) / letterH, (rs0[1] - startLon) / letterW) +
+                         Math.hypot((rs1[0] - endLat) / letterH, (rs1[1] - endLon) / letterW)) / 2;
+              errCnt++;
+
+              if (currentPath.length > 0) {
+                // Join with previous segment by walking the road network, NOT drawing a straight line
+                const prevEnd = currentPath[currentPath.length - 1];
+                const nextStart = roadSegment[0];
+                const connector = walkStroke(prevEnd[0], prevEnd[1], nextStart[0], nextStart[1], graph, nodes);
+
+                if (connector.length > 0) {
+                  currentPath.push(...connector.slice(1));
+                }
+                currentPath.push(...roadSegment.slice(1));
+              } else {
+                currentPath = roadSegment;
+              }
+              lLat = roadSegment[roadSegment.length - 1][0];
+              lLon = roadSegment[roadSegment.length - 1][1];
+            } else {
+              errSum += 1;
+              errCnt++;
+            }
+          }
+          if (currentPath.length > 0) paths.push(currentPath);
+        }
+        return {
+          strokePaths: paths,
+          firstPointLat: fLat, firstPointLon: fLon,
+          lastPointLat: lLat, lastPointLon: lLon,
+          quality: errCnt > 0 ? errSum / errCnt : 0
+        };
+      };
+
+      // まず本来の位置でなぞる。川・海・道なしで大きく失敗した文字だけ、周囲に少しずらして描き直す
+      let charBBox = baseBBox;
+      let traced = traceLetterAt(charBBox);
+      if (text !== 'ROAD\nTRACER' && traced.quality > RETRY_QUALITY) {
+        const cands = [];
+        for (const sy of RETRY_SHIFT_Y) {
+          for (const sx of RETRY_SHIFT_X) {
+            if (sx === 0 && sy === 0) continue;
+            const bb = {
+              minLat: baseBBox.minLat - sy * letterH,
+              maxLat: baseBBox.maxLat - sy * letterH,
+              minLon: baseBBox.minLon + sx * letterW,
+              maxLon: baseBBox.maxLon + sx * letterW
+            };
+            cands.push({ bb, gap: roadGapScore(template, bb) });
           }
         }
-        if (currentPath.length > 0) strokePaths.push(currentPath);
+        // 文字の骨格の近くに道がある位置から順に、実際になぞって比べる（上位3か所）
+        cands.sort((x, y) => x.gap - y.gap);
+        for (const c of cands.slice(0, 3)) {
+          const t = traceLetterAt(c.bb);
+          if (t.quality < traced.quality) {
+            traced = t;
+            charBBox = c.bb;
+          }
+          if (traced.quality <= RETRY_QUALITY) break;
+        }
       }
-      
+      const { strokePaths, firstPointLat, firstPointLon, lastPointLat, lastPointLon } = traced;
+
       // If connected mode is ON, draw a stylized 'bridge' path
       // from the bottom-right of the previous letter to the bottom-left of the current letter
       if (connectLetters && prevCharEnd && firstPointLat !== null && prevCharBBox) {
