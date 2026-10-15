@@ -334,8 +334,11 @@ function traceText(text, mapCenter, letterSizeMeters, allWays, connectLetters = 
 
   // ─── 1文字目が川・海・道なしで失敗するのを防ぐ「ずらして再挑戦」用の補助 ───
   const RETRY_QUALITY = 0.15;                 // これより誤差が大きい文字だけ再挑戦
-  const RETRY_SHIFT_X = [-0.3, -0.15, 0, 0.15, 0.3]; // 文字幅に対する横ずらし量
-  const RETRY_SHIFT_Y = [-0.4, -0.2, 0, 0.2, 0.4];   // 文字高さに対する縦ずらし量
+  // 文字幅に対する横ずらし量。行の左端の文字は「もっと左から書く」、右端の文字は右へ大きくずらせる（隣の文字とは重ねない）
+  const RETRY_SHIFT_X = [-0.6, -0.45, -0.3, -0.15, 0, 0.15, 0.3, 0.45, 0.6];
+  const RETRY_EDGE_SHIFT = 0.6;     // 行の端の文字が外側へずらせる最大量
+  const RETRY_INNER_SHIFT = 0.2;    // 隣に文字がある側へずらせる最大量
+  const RETRY_SHIFT_Y = [-0.3, -0.15, 0, 0.15, 0.3]; // 文字高さに対する縦ずらし量
 
   // 道路ノードの空間インデックス（ずらした位置に道があるかを高速に判定する）
   let nodeIndex = null;
@@ -430,7 +433,8 @@ function traceText(text, mapCenter, letterSizeMeters, allWays, connectLetters = 
       }
     }
 
-    for (const char of chars) {
+    for (let charIdx = 0; charIdx < chars.length; charIdx++) {
+      const char = chars[charIdx];
       if (char === ' ') { 
         currentLon += letterW + gapW; 
         // スペース（単語の区切り）では繋がりをリセットする
@@ -489,7 +493,7 @@ function traceText(text, mapCenter, letterSizeMeters, allWays, connectLetters = 
         const paths = [];
         let fLat = null, fLon = null;
         let lLat = null, lLon = null;
-        let errSum = 0, errCnt = 0;
+        let errSum = 0, errCnt = 0, errMax = 0;
 
         // Map template 0.0-1.0 coords to geographical coords and trace
         for (const stroke of template) {
@@ -518,8 +522,13 @@ function traceText(text, mapCenter, letterSizeMeters, allWays, connectLetters = 
             if (roadSegment.length > 0) {
               const rs0 = roadSegment[0];
               const rs1 = roadSegment[roadSegment.length - 1];
-              errSum += (Math.hypot((rs0[0] - startLat) / letterH, (rs0[1] - startLon) / letterW) +
-                         Math.hypot((rs1[0] - endLat) / letterH, (rs1[1] - endLon) / letterW)) / 2;
+              // 始点・終点のうち悪いほうのズレ（文字サイズ比）。川で線が途中で途切れた場合などを見逃さない
+              const segErr = Math.max(
+                Math.hypot((rs0[0] - startLat) / letterH, (rs0[1] - startLon) / letterW),
+                Math.hypot((rs1[0] - endLat) / letterH, (rs1[1] - endLon) / letterW)
+              );
+              errSum += segErr;
+              if (segErr > errMax) errMax = segErr;
               errCnt++;
 
               if (currentPath.length > 0) {
@@ -539,6 +548,7 @@ function traceText(text, mapCenter, letterSizeMeters, allWays, connectLetters = 
               lLon = roadSegment[roadSegment.length - 1][1];
             } else {
               errSum += 1;
+              errMax = 1;
               errCnt++;
             }
           }
@@ -548,7 +558,7 @@ function traceText(text, mapCenter, letterSizeMeters, allWays, connectLetters = 
           strokePaths: paths,
           firstPointLat: fLat, firstPointLon: fLon,
           lastPointLat: lLat, lastPointLon: lLon,
-          quality: errCnt > 0 ? errSum / errCnt : 0
+          quality: errCnt > 0 ? (errSum / errCnt + errMax) / 2 : 0
         };
       };
 
@@ -557,21 +567,28 @@ function traceText(text, mapCenter, letterSizeMeters, allWays, connectLetters = 
       let traced = traceLetterAt(charBBox);
       if (text !== 'ROAD\nTRACER' && traced.quality > RETRY_QUALITY) {
         const cands = [];
+        // 行の左端（先頭・スペース直後）の文字は左へ、右端の文字は右へ大きくずらせる
+        const isLineStart = charIdx === 0 || chars[charIdx - 1] === ' ';
+        const isLineEnd = charIdx === chars.length - 1 || chars[charIdx + 1] === ' ';
+        const maxLeft = isLineStart ? RETRY_EDGE_SHIFT : RETRY_INNER_SHIFT;
+        const maxRight = isLineEnd ? RETRY_EDGE_SHIFT : RETRY_INNER_SHIFT;
         for (const sy of RETRY_SHIFT_Y) {
           for (const sx of RETRY_SHIFT_X) {
             if (sx === 0 && sy === 0) continue;
+            if (sx < -maxLeft - 1e-9 || sx > maxRight + 1e-9) continue;
             const bb = {
               minLat: baseBBox.minLat - sy * letterH,
               maxLat: baseBBox.maxLat - sy * letterH,
               minLon: baseBBox.minLon + sx * letterW,
               maxLon: baseBBox.maxLon + sx * letterW
             };
-            cands.push({ bb, gap: roadGapScore(template, bb) });
+            // 骨格が道に近い位置ほど有利。同程度なら元の位置に近い（ずらし量が小さい）ほうを優先
+            cands.push({ bb, gap: roadGapScore(template, bb) + 0.03 * (Math.abs(sx) + Math.abs(sy)) });
           }
         }
-        // 文字の骨格の近くに道がある位置から順に、実際になぞって比べる（上位3か所）
+        // 文字の骨格の近くに道がある位置から順に、実際になぞって比べる（上位4か所）
         cands.sort((x, y) => x.gap - y.gap);
-        for (const c of cands.slice(0, 3)) {
+        for (const c of cands.slice(0, 4)) {
           const t = traceLetterAt(c.bb);
           if (t.quality < traced.quality) {
             traced = t;

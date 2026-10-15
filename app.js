@@ -379,7 +379,7 @@ async function startTrace() {
 
   // キャッシュキーの作成（住所・文字・サイズ・色が同じならキャッシュを使う）
   const baseKey = btoa(unescape(encodeURIComponent(address + text + letterSize + textColorHex + isRandomColor)));
-  const cacheKey = `maptypo_cache_v28_${baseKey}`;
+  const cacheKey = `maptypo_cache_v29_${baseKey}`;
   const cached = localStorage.getItem(cacheKey);
 
   if (cached) {
