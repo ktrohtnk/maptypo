@@ -65,9 +65,53 @@ function setBtn(loading) {
   document.getElementById('search-spinner').classList.toggle('hidden', !loading);
 }
 
+const BROAD_CITY_CORES = {
+  'newyork': { lat: 40.7527, lon: -73.9855 },
+  'newyorkcity': { lat: 40.7527, lon: -73.9855 },
+  'nyc': { lat: 40.7527, lon: -73.9855 },
+  'manhattan': { lat: 40.7527, lon: -73.9855 },
+  'ニューヨーク': { lat: 40.7527, lon: -73.9855 },
+  'マンハッタン': { lat: 40.7527, lon: -73.9855 }
+};
+
+function pickBestGeocodeCandidate(data) {
+  if (!data || !data.length) return null;
+  const urbanTypes = new Set(['city', 'town', 'village', 'suburb', 'quarter', 'neighbourhood', 'commercial', 'residential']);
+  const spanKm = (d) => {
+    if (!Array.isArray(d.boundingbox) || d.boundingbox.length < 4) return 0;
+    const [s, n, w, e] = d.boundingbox.map(parseFloat);
+    const lat = parseFloat(d.lat);
+    return Math.max((n - s) * 111.32, (e - w) * 111.32 * Math.cos(lat * Math.PI / 180));
+  };
+
+  const top = data[0];
+  const topImp = parseFloat(top.importance) || 0;
+  const topSpan = spanKm(top);
+
+  for (let i = 0; i < data.length; i++) {
+    const d = data[i];
+    const sp = spanKm(d);
+    const imp = parseFloat(d.importance) || 0;
+    if (d.class === 'place' && urbanTypes.has(d.type) && (imp >= topImp - 0.15 || (topSpan > 80 && sp < 60))) {
+      return d;
+    }
+  }
+
+  if (topSpan > 80) {
+    const smaller = data.find(d => spanKm(d) > 0 && spanKm(d) <= 60);
+    if (smaller) return smaller;
+  }
+  return top;
+}
+
 async function geocode(address) {
+  const norm = address.replace(/[\s　,]+/g, '').toLowerCase();
+  if (BROAD_CITY_CORES[norm]) {
+    return { ...BROAD_CITY_CORES[norm] };
+  }
+
   const fetchGeocode = async (q) => {
-    let url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`;
+    let url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5`;
     const res = await fetch(url, { headers: { 'User-Agent': 'RoadTracer/1.0' } });
     return await res.json();
   };
@@ -92,61 +136,29 @@ async function geocode(address) {
     data = await fetchGeocode(fallback2);
   }
 
-  if (!data || !data.length) throw new Error('住所が見つかりません');
-  // Nominatimのboundingbox は [south, north, west, east] の文字列配列
-  const bbox = Array.isArray(data[0].boundingbox) ? data[0].boundingbox.map(parseFloat) : null;
-  return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon), bbox };
+  const best = pickBestGeocodeCandidate(data);
+  if (!best) throw new Error('住所が見つかりません');
+  return { lat: parseFloat(best.lat), lon: parseFloat(best.lon) };
 }
 
-// ─── 広域検索（例: New York）で道が多い場所を自動選択する ─────────────────────
 const OVERPASS_ENDPOINTS = [
-  'https://overpass-api.de/api/interpreter',
-  'https://lz4.overpass-api.de/api/interpreter',
-  'https://z.overpass-api.de/api/interpreter',
   'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+  'https://overpass-api.de/api/interpreter',
   'https://overpass.kumi.systems/api/interpreter'
 ];
 
-// 検索結果が広域（約8km超）かどうか
-function isLargeArea(loc) {
-  if (!loc.bbox) return false;
-  const [s, n, w, e] = loc.bbox;
-  const hKm = (n - s) * 111.32;
-  const wKm = (e - w) * 111.32 * Math.cos(loc.lat * Math.PI / 180);
-  return Math.max(hKm, wKm) > 8;
-}
-
-// 中心(lat, lon)から ±halfSpanM の範囲に n×n 個の候補点を作る
-function gridCenters(lat, lon, halfSpanM, n) {
-  const out = [];
-  const cosLat = Math.cos(lat * Math.PI / 180);
-  for (let i = 0; i < n; i++) {
-    for (let j = 0; j < n; j++) {
-      const fy = (i / (n - 1)) * 2 - 1;
-      const fx = (j / (n - 1)) * 2 - 1;
-      out.push({
-        lat: lat + (fy * halfSpanM) / 111320,
-        lon: lon + (fx * halfSpanM) / (111320 * cosLat)
-      });
-    }
+async function queryOverpassWays(bbox, includeMinor) {
+  let hwQuery = `way["highway"="motorway"](${bbox});way["highway"="trunk"](${bbox});way["highway"="primary"](${bbox});way["highway"="secondary"](${bbox});way["highway"="tertiary"](${bbox});way["highway"="residential"](${bbox});way["highway"="unclassified"](${bbox});`;
+  if (includeMinor) {
+    hwQuery += `way["highway"="pedestrian"](${bbox});way["highway"="footway"](${bbox});way["highway"="path"](${bbox});way["highway"="service"](${bbox});way["highway"="living_street"](${bbox});way["highway"="track"](${bbox});`;
   }
-  return out;
-}
 
-// 各候補点の周囲（±halfM四方）の道路本数を、1回のOverpass通信でまとめて数える（geometryは取得しないので軽量）
-async function countRoadsAround(centers, halfM) {
-  const parts = centers.map(c => {
-    const dLat = halfM / 111320;
-    const dLon = halfM / (111320 * Math.cos(c.lat * Math.PI / 180));
-    const b = `${c.lat - dLat},${c.lon - dLon},${c.lat + dLat},${c.lon + dLon}`;
-    return `(way["highway"="primary"](${b});way["highway"="secondary"](${b});way["highway"="tertiary"](${b});way["highway"="residential"](${b});way["highway"="unclassified"](${b}););out count;`;
-  });
-  const query = `[out:json][timeout:40];${parts.join('')}`;
-
+  const query = `[out:json][timeout:60];(${hwQuery});out geom;`;
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000);
+  const timeoutId = setTimeout(() => controller.abort(), 60000);
+
   try {
-    const counts = await Promise.any(OVERPASS_ENDPOINTS.map(async (url) => {
+    const promises = OVERPASS_ENDPOINTS.map(async (url) => {
       const res = await fetch(url, {
         method: 'POST',
         body: 'data=' + encodeURIComponent(query),
@@ -154,133 +166,42 @@ async function countRoadsAround(centers, halfM) {
       });
       if (!res.ok) throw new Error(`Status ${res.status}`);
       const json = await res.json();
-      const list = (json.elements || [])
-        .filter(el => el.type === 'count')
-        .map(el => parseInt(el.tags && el.tags.ways, 10) || 0);
-      if (list.length !== centers.length) throw new Error('Unexpected count result');
-      return list;
-    }));
+      if (!json || !Array.isArray(json.elements)) throw new Error('Invalid Overpass JSON');
+      return json.elements.map(el => (el.geometry || []).map(p => [p.lat, p.lon])).filter(w => w.length >= 2);
+    });
+
+    const result = await Promise.any(promises);
     controller.abort();
-    return counts;
+    return result;
   } finally {
     clearTimeout(timeoutId);
   }
 }
 
-// 候補中心ごとに、文字ブロック全体（四隅・辺の中点・中央の3×3地点）の道路本数を数えてスコア化する。
-// 一部（1文字目など）が川や海にかかる場所は「どこかが0本」になるため点数が大きく下がる。
-const FOOTPRINT_LATTICE = [-1, 0, 1];
-
-function footprintSamplePoints(center, footW, footH) {
-  const cosLat = Math.cos(center.lat * Math.PI / 180);
-  const pts = [];
-  for (const fy of FOOTPRINT_LATTICE) {
-    for (const fx of FOOTPRINT_LATTICE) {
-      pts.push({
-        lat: center.lat + (fy * footH * 0.45) / 111320,
-        lon: center.lon + (fx * footW * 0.45) / (111320 * cosLat)
-      });
-    }
-  }
-  return pts;
-}
-
-// 合計の道路量 + 「最も道が少ない地点」を重く評価（全体が道に乗っている場所を優先）
-function footprintScore(counts) {
-  const sumLog = counts.reduce((a, c) => a + Math.log(1 + c), 0);
-  const minLog = Math.log(1 + Math.min(...counts));
-  return sumLog + 3 * minLog;
-}
-
-async function scoreCenters(centers, footW, footH, halfM) {
-  const perCenter = FOOTPRINT_LATTICE.length * FOOTPRINT_LATTICE.length;
-  const points = centers.flatMap(c => footprintSamplePoints(c, footW, footH));
-  const counts = await countRoadsAround(points, halfM);
-  return centers.map((_, i) => footprintScore(counts.slice(i * perCenter, (i + 1) * perCenter)));
-}
-
-// 広域の場合のみ、文字ブロック全体が道に乗る地点へ中心を移動する（失敗時は元の中心をそのまま使う）
-async function pickDenseCenter(loc, footW, footH, letterM) {
-  if (!isLargeArea(loc)) return loc;
-  try {
-    const [s, n, w, e] = loc.bbox;
-    const cosLat = Math.cos(loc.lat * Math.PI / 180);
-    const spanM = Math.max((n - s) * 111320, (e - w) * 111320 * cosLat);
-    const halfSpan = Math.min(12000, spanM / 2);
-    const sampleHalf = Math.max(100, Math.min(400, letterM * 0.3));
-
-    // 1段階目：広く粗くスキャン（4×4候補 × 9サンプル）
-    let centers = gridCenters(loc.lat, loc.lon, halfSpan, 4);
-    let scores = await scoreCenters(centers, footW, footH, sampleHalf);
-    let best = scores.indexOf(Math.max(...scores));
-    if (scores[best] <= 0) return loc;
-    let bestCenter = centers[best];
-
-    // 2段階目：見つかった高スコア周辺を細かくスキャン（4×4候補 × 9サンプル）
-    centers = gridCenters(bestCenter.lat, bestCenter.lon, halfSpan / 3, 4);
-    scores = await scoreCenters(centers, footW, footH, sampleHalf);
-    best = scores.indexOf(Math.max(...scores));
-    if (scores[best] > 0) bestCenter = centers[best];
-
-    return { ...loc, lat: bestCenter.lat, lon: bestCenter.lon, bbox: null };
-  } catch (e) {
-    console.warn('Dense center search failed, using geocoded center', e);
-    return loc;
-  }
-}
-
-
 async function fetchRoads(lat, lon, widthM, heightM = widthM) {
-  const safeW = Math.min(widthM / 2, 4000) + 200;
-  const safeH = Math.min(heightM / 2, 4000) + 200;
+  const safeW = Math.min(3500, Math.max(widthM / 2, 800) + 600);
+  const safeH = Math.min(3500, Math.max(heightM / 2, 800) + 600);
+  const cosLat = Math.max(0.2, Math.cos(lat * Math.PI / 180));
   const dLat = safeH / 111320;
-  const dLon = safeW / (111320 * Math.cos(lat * Math.PI / 180));
-  const bbox = `${lat-dLat},${lon-dLon},${lat+dLat},${lon+dLon}`;
+  const dLon = safeW / (111320 * cosLat);
+  const bbox = `${lat - dLat},${lon - dLon},${lat + dLat},${lon + dLon}`;
 
   const isLarge = Math.max(safeW, safeH) > 1500;
-  
-  // 以前の最適化手法（完全一致検索）がやはり東京等の重いエリアでは「必須」だったため復活させます
-  // スイスの空サーバーを抜いた今なら、これによって劇的な高速化（数秒での描画）が確実に行われます
-  let hwQuery = `way["highway"="motorway"](${bbox});way["highway"="trunk"](${bbox});way["highway"="primary"](${bbox});way["highway"="secondary"](${bbox});way["highway"="tertiary"](${bbox});way["highway"="residential"](${bbox});way["highway"="unclassified"](${bbox});`;
-  if (!isLarge) {
-    hwQuery += `way["highway"="pedestrian"](${bbox});way["highway"="footway"](${bbox});way["highway"="path"](${bbox});way["highway"="service"](${bbox});way["highway"="living_street"](${bbox});way["highway"="track"](${bbox});`;
-  }
 
-  const query = `[out:json][timeout:90];(${hwQuery});out geom;`;
-  
-  // 世界中のメインサーバー（ドイツ）が現在軒並みダウン・超遅延しているため、
-  // 現在最も高速で安定しているスイスの公式ミラーサーバーを最優先に追加
-  const endpoints = [
-    'https://overpass-api.de/api/interpreter',
-    'https://lz4.overpass-api.de/api/interpreter',
-    'https://z.overpass-api.de/api/interpreter',
-    'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
-    'https://overpass.kumi.systems/api/interpreter'
-  ];
-  
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 90000); // 90秒で強制タイムアウト（読み込みばかりになるのを防ぐ）
   try {
-    const promises = endpoints.map(async (url) => {
-      const res = await fetch(url, { 
-        method: 'POST', 
-        body: 'data=' + encodeURIComponent(query),
-        signal: controller.signal
-      });
-      if (!res.ok) throw new Error(`Status ${res.status}`);
-      const json = await res.json();
-      // データが空の場合はエラーとして投げ、Promise.anyに他のサーバーを待たせる
-      if (!json.elements || json.elements.length === 0) throw new Error('Empty Data');
-      
-      const ways = json.elements.map(el => (el.geometry || []).map(p => [p.lat, p.lon])).filter(w => w.length >= 2);
-      if (ways.length === 0) throw new Error('No valid ways');
-      return ways;
-    });
+    let ways = await queryOverpassWays(bbox, !isLarge);
 
-    // 最初に成功した通信結果を受け取る
-    const result = await Promise.any(promises);
-    controller.abort(); // 負けた他のサーバーへの通信は即座にキャンセルして負荷を下げる
-    return result;
+    // 郊外・離島・公園付近などで主要道が少ない場合は細街路（歩道・農道・私道など）も含めて再取得する
+    if (isLarge && ways.length < 60) {
+      try {
+        const minorWays = await queryOverpassWays(bbox, true);
+        if (minorWays.length > ways.length) ways = minorWays;
+      } catch (e) {
+        if (ways.length === 0) throw e;
+      }
+    }
+
+    return ways;
   } catch (e) {
     throw new Error('現在、世界の地図サーバー全体が大変混雑しており、データが取得できませんでした。少し時間をおいて再度お試しください。');
   }
@@ -379,7 +300,7 @@ async function startTrace() {
 
   // キャッシュキーの作成（住所・文字・サイズ・色が同じならキャッシュを使う）
   const baseKey = btoa(unescape(encodeURIComponent(address + text + letterSize + textColorHex + isRandomColor)));
-  const cacheKey = `maptypo_cache_v29_${baseKey}`;
+  const cacheKey = `maptypo_cache_v30_${baseKey}`;
   const cached = localStorage.getItem(cacheKey);
 
   if (cached) {
@@ -514,14 +435,6 @@ async function startTrace() {
     }
 
     const requiredSize = Math.max(estimatedWidth, estimatedHeight);
-
-    // 広域検索（New York等）の場合：文字ブロック全体が道の多い場所に乗るよう中心を選び直す
-    if (!isShowcase && isLargeArea(loc)) {
-      setStatus('Finding the area with the most roads...', 30);
-      const footW = (maxLineLen + (maxLineLen - 1) * 0.3) * actualLetterSize;
-      const footH = (lines.length + (lines.length - 1) * 0.5) * actualLetterSize;
-      loc = await pickDenseCenter(loc, footW, footH, actualLetterSize);
-    }
     
     let zoom = 14;
     if (requiredSize > 3000) zoom = 13;
@@ -656,7 +569,7 @@ async function animateDrawing(traceResults, textColorHex, isRandomColor, animati
     const padding = window.innerWidth < 600 ? 30 : 50; // 画面いっぱいにしすぎないよう程よく引く
     map.fitBounds(bounds, padding);
     // カメラの移動完了を待つ
-    await new Promise(r => setTimeout(r, 1500));
+    await new Promise(r => setTimeout(r, 600));
   }
 
   // 3. 座標マトリックスエフェクト (文字描画と同時に表示・シャッフル開始)
